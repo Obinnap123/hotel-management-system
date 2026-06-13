@@ -6,6 +6,7 @@ import { getCurrentSession } from "@/server/auth/session";
 
 const navigationItems = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/dashboard/room-types", label: "Room Types" },
   { href: "/dashboard/rooms", label: "Rooms" },
   { href: "/dashboard/guests", label: "Guests" },
   { href: "/dashboard/bookings", label: "Bookings" },

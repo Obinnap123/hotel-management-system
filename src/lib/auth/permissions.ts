@@ -5,6 +5,7 @@ export const protectedPaths = [
 ] as const;
 
 export const adminOnlyPaths = [
+  "/dashboard/room-types",
   "/dashboard/users",
   "/dashboard/settings",
 ] as const;
