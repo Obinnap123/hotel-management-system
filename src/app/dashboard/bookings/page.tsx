@@ -41,6 +41,7 @@ export default async function BookingsPage({
         roomTypeName: booking.room.roomType.name,
         checkInDate: dateFormatter.format(booking.checkInDate),
         checkOutDate: dateFormatter.format(booking.checkOutDate),
+        totalAmount: booking.totalAmount.toString(),
         checkInInput: toDateInputValue(booking.checkInDate),
         checkOutInput: toDateInputValue(booking.checkOutDate),
         status: booking.status,

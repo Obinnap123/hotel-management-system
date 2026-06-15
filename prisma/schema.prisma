@@ -96,6 +96,7 @@ model Booking {
   id           String        @id @default(cuid())
   checkInDate  DateTime
   checkOutDate DateTime
+  totalAmount  Decimal       @db.Decimal(12, 2)
   checkedInAt  DateTime?
   checkedOutAt DateTime?
   status       BookingStatus @default(PENDING)
@@ -109,7 +110,7 @@ model Booking {
   guest     Guest     @relation(fields: [guestId], references: [id], onDelete: Restrict)
   room      Room      @relation(fields: [roomId], references: [id], onDelete: Restrict)
   createdBy User      @relation("BookingCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
-  payments  Payment[]
+  payment   Payment?
 
   @@index([guestId])
   @@index([roomId])
@@ -127,13 +128,12 @@ model Payment {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  bookingId    String
+  bookingId    String @unique
   recordedById String
 
   booking    Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
   recordedBy User    @relation("PaymentRecordedBy", fields: [recordedById], references: [id], onDelete: Restrict)
 
-  @@index([bookingId])
   @@index([recordedById])
   @@index([paymentDate])
 }

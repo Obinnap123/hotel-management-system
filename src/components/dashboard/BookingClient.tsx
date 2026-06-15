@@ -27,6 +27,7 @@ export type BookingTableItem = {
   roomTypeName: string;
   checkInDate: string;
   checkOutDate: string;
+  totalAmount: string;
   checkInInput: string;
   checkOutInput: string;
   status: BookingStatus;
@@ -157,6 +158,7 @@ export function BookingClient({
                 <th className="py-3 pr-4 font-medium">Room Type</th>
                 <th className="py-3 pr-4 font-medium">Check In</th>
                 <th className="py-3 pr-4 font-medium">Check Out</th>
+                <th className="py-3 pr-4 font-medium">Total Amount</th>
                 <th className="py-3 pr-4 font-medium">Status</th>
                 <th className="py-3 pr-4 font-medium">Created At</th>
                 <th className="py-3 text-right font-medium">Actions</th>
@@ -179,6 +181,9 @@ export function BookingClient({
                   </td>
                   <td className="py-3 pr-4 text-zinc-700">
                     {booking.checkOutDate}
+                  </td>
+                  <td className="py-3 pr-4 text-zinc-700">
+                    NGN {Number(booking.totalAmount).toLocaleString()}
                   </td>
                   <td className="py-3 pr-4">
                     <BookingStatusBadge status={booking.status} />

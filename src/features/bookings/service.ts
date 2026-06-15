@@ -28,11 +28,16 @@ export async function createBooking(
 
   return prisma.$transaction(async (tx) => {
     await validateGuestExists(input.guestId, tx);
-    await validateRoomCanBeBooked({
+    const room = await validateRoomCanBeBooked({
       roomId: input.roomId,
       checkInDate: dates.checkInDate,
       checkOutDate: dates.checkOutDate,
       tx,
+    });
+    const totalAmount = calculateBookingTotal({
+      checkInDate: dates.checkInDate,
+      checkOutDate: dates.checkOutDate,
+      pricePerNight: room.pricePerNight,
     });
 
     const booking = await tx.booking.create({
@@ -41,6 +46,7 @@ export async function createBooking(
         roomId: input.roomId,
         checkInDate: dates.checkInDate,
         checkOutDate: dates.checkOutDate,
+        totalAmount,
         createdById,
         status: BookingStatus.PENDING,
       },
@@ -71,12 +77,17 @@ export async function updateBooking(bookingId: string, input: BookingFormInput) 
     }
 
     await validateGuestExists(input.guestId, tx);
-    await validateRoomCanBeBooked({
+    const room = await validateRoomCanBeBooked({
       roomId: input.roomId,
       checkInDate: dates.checkInDate,
       checkOutDate: dates.checkOutDate,
       excludeBookingId: bookingId,
       tx,
+    });
+    const totalAmount = calculateBookingTotal({
+      checkInDate: dates.checkInDate,
+      checkOutDate: dates.checkOutDate,
+      pricePerNight: room.pricePerNight,
     });
 
     const updatedBooking = await tx.booking.update({
@@ -86,6 +97,7 @@ export async function updateBooking(bookingId: string, input: BookingFormInput) 
         roomId: input.roomId,
         checkInDate: dates.checkInDate,
         checkOutDate: dates.checkOutDate,
+        totalAmount,
       },
     });
 
@@ -171,6 +183,7 @@ async function validateRoomCanBeBooked({
     select: {
       id: true,
       status: true,
+      pricePerNight: true,
     },
   });
 
@@ -206,4 +219,26 @@ async function validateRoomCanBeBooked({
       "This room is already booked for the selected dates.",
     );
   }
+
+  return room;
+}
+
+function calculateBookingTotal({
+  checkInDate,
+  checkOutDate,
+  pricePerNight,
+}: {
+  checkInDate: Date;
+  checkOutDate: Date;
+  pricePerNight: Prisma.Decimal;
+}) {
+  const millisecondsPerDay = 1000 * 60 * 60 * 24;
+  const nights = Math.max(
+    1,
+    Math.ceil(
+      (checkOutDate.getTime() - checkInDate.getTime()) / millisecondsPerDay,
+    ),
+  );
+
+  return pricePerNight.mul(nights);
 }
