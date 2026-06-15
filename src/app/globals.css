@@ -34,3 +34,6 @@ input::placeholder,
 textarea::placeholder {
   color: #71717a !important;
 }
+button, select{
+  cursor: pointer;
+}

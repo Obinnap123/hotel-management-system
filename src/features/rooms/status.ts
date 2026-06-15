@@ -1,4 +1,4 @@
-import { RoomStatus } from "@prisma/client";
+import { Prisma, RoomStatus } from "@prisma/client";
 import { prisma } from "@/server/db/prisma";
 
 export async function manuallyUpdateRoomStatusForMvp(
@@ -8,24 +8,42 @@ export async function manuallyUpdateRoomStatusForMvp(
   return updateRoomStatus(roomId, status);
 }
 
-export async function markRoomReserved(roomId: string) {
-  return updateRoomStatus(roomId, RoomStatus.RESERVED);
+export async function markRoomReserved(
+  roomId: string,
+  db: RoomStatusClient = prisma,
+) {
+  return updateRoomStatus(roomId, RoomStatus.RESERVED, db);
 }
 
-export async function markRoomOccupied(roomId: string) {
-  return updateRoomStatus(roomId, RoomStatus.OCCUPIED);
+export async function markRoomOccupied(
+  roomId: string,
+  db: RoomStatusClient = prisma,
+) {
+  return updateRoomStatus(roomId, RoomStatus.OCCUPIED, db);
 }
 
-export async function markRoomAvailable(roomId: string) {
-  return updateRoomStatus(roomId, RoomStatus.AVAILABLE);
+export async function markRoomAvailable(
+  roomId: string,
+  db: RoomStatusClient = prisma,
+) {
+  return updateRoomStatus(roomId, RoomStatus.AVAILABLE, db);
 }
 
-export async function markRoomMaintenance(roomId: string) {
-  return updateRoomStatus(roomId, RoomStatus.MAINTENANCE);
+export async function markRoomMaintenance(
+  roomId: string,
+  db: RoomStatusClient = prisma,
+) {
+  return updateRoomStatus(roomId, RoomStatus.MAINTENANCE, db);
 }
 
-async function updateRoomStatus(roomId: string, status: RoomStatus) {
-  return prisma.room.update({
+type RoomStatusClient = Pick<Prisma.TransactionClient, "room">;
+
+async function updateRoomStatus(
+  roomId: string,
+  status: RoomStatus,
+  db: RoomStatusClient = prisma,
+) {
+  return db.room.update({
     where: { id: roomId },
     data: { status },
   });
