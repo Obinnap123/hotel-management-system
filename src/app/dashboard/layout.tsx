@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { logoutAction } from "@/app/login/actions";
+import { AccountMenu } from "@/components/layout/AccountMenu";
 import { canAccessPath } from "@/lib/auth/permissions";
 import { getCurrentSession } from "@/server/auth/session";
 
@@ -65,14 +65,11 @@ export default async function DashboardLayout({
               </p>
             </div>
 
-            <form action={logoutAction}>
-              <button
-                className="h-10 rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
-                type="submit"
-              >
-                Sign out
-              </button>
-            </form>
+            <AccountMenu
+              email={session.email}
+              fullName={session.fullName}
+              role={session.role}
+            />
           </div>
 
           <nav className="mt-4 flex gap-2 overflow-x-auto lg:hidden">

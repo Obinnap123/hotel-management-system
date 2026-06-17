@@ -4,7 +4,7 @@ import { prisma } from "@/server/db/prisma";
 
 export class CheckInRuleError extends Error {}
 
-export async function checkInBooking(bookingId: string) {
+export async function checkInBooking(bookingId: string, checkedInById: string) {
   return prisma.$transaction(async (tx) => {
     const booking = await tx.booking.findUnique({
       where: { id: bookingId },
@@ -31,11 +31,20 @@ export async function checkInBooking(bookingId: string) {
       throw new CheckInRuleError("This booking has already been checked in.");
     }
 
+    const staff = await tx.user.findUnique({
+      where: { id: checkedInById },
+    });
+
+    if (!staff) {
+      throw new CheckInRuleError("The staff account was not found.");
+    }
+
     const checkedInBooking = await tx.booking.update({
       where: { id: bookingId },
       data: {
         status: BookingStatus.CHECKED_IN,
         checkedInAt: new Date(),
+        checkedInById,
       },
     });
 

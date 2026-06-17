@@ -1,7 +1,11 @@
 "use client";
 
-import { BookingStatus } from "@prisma/client";
-import { Edit, Plus, Search, XCircle } from "lucide-react";
+import {
+  BookingStatus,
+  type PaymentMethod,
+  type RoomStatus,
+} from "@prisma/client";
+import { Edit, Eye, Plus, Search, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   type KeyboardEvent,
@@ -16,6 +20,7 @@ import {
   updateBookingAction,
   type BookingActionState,
 } from "@/features/bookings/actions";
+import { BookingDetailsModal } from "@/components/dashboard/BookingDetailsModal";
 import { Modal } from "@/components/ui/Modal";
 
 export type BookingTableItem = {
@@ -25,6 +30,9 @@ export type BookingTableItem = {
   roomId: string;
   roomNumber: string;
   roomTypeName: string;
+  roomPricePerNight: string;
+  roomCapacity: number;
+  roomStatus: RoomStatus;
   checkInDate: string;
   checkOutDate: string;
   totalAmount: string;
@@ -32,6 +40,19 @@ export type BookingTableItem = {
   checkOutInput: string;
   status: BookingStatus;
   createdAt: string;
+  createdAtFull: string;
+  createdByName: string;
+  guestPhoneNumber: string;
+  guestEmail: string | null;
+  guestAddress: string | null;
+  paymentAmount: string | null;
+  paymentMethod: PaymentMethod | null;
+  paymentDate: string | null;
+  paymentRecordedByName: string | null;
+  checkedInAt: string | null;
+  checkedInByName: string | null;
+  checkedOutAt: string | null;
+  checkedOutByName: string | null;
 };
 
 export type BookingGuestOption = {
@@ -193,6 +214,21 @@ export function BookingClient({
                   </td>
                   <td className="py-3 text-right">
                     <div className="flex justify-end gap-2">
+                      <BookingDetailsModal
+                        booking={booking}
+                        trigger={
+                          <button
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-300 text-zinc-700 transition hover:bg-zinc-50"
+                            title="View booking details"
+                            type="button"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">
+                              View booking details
+                            </span>
+                          </button>
+                        }
+                      />
                       <EditBookingDialog
                         booking={booking}
                         guests={guests}

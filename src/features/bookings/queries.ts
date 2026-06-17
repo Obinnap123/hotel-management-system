@@ -10,7 +10,14 @@ export async function getBookings() {
           roomType: true,
         },
       },
-      payment: true,
+      createdBy: true,
+      checkedInBy: true,
+      checkedOutBy: true,
+      payment: {
+        include: {
+          recordedBy: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",

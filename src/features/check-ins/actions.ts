@@ -9,7 +9,7 @@ import { checkInFormSchema } from "./validation";
 const checkInsPath = "/dashboard/check-ins";
 
 export async function checkInBookingAction(formData: FormData) {
-  await requireAuthenticatedStaff();
+  const session = await requireAuthenticatedStaff();
   const parsed = checkInFormSchema.safeParse(Object.fromEntries(formData));
 
   if (!parsed.success) {
@@ -17,7 +17,7 @@ export async function checkInBookingAction(formData: FormData) {
   }
 
   try {
-    await checkInBooking(parsed.data.bookingId);
+    await checkInBooking(parsed.data.bookingId, session.userId);
   } catch (error) {
     const message =
       error instanceof CheckInRuleError

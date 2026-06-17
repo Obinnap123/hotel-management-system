@@ -15,6 +15,11 @@ const dateFormatter = new Intl.DateTimeFormat("en", {
   dateStyle: "medium",
 });
 
+const dateTimeFormatter = new Intl.DateTimeFormat("en", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
 const successMessages: Record<string, string> = {
   "booking-cancelled": "Booking cancelled.",
 };
@@ -39,6 +44,9 @@ export default async function BookingsPage({
         roomId: booking.roomId,
         roomNumber: booking.room.roomNumber,
         roomTypeName: booking.room.roomType.name,
+        roomPricePerNight: booking.room.pricePerNight.toString(),
+        roomCapacity: booking.room.capacity,
+        roomStatus: booking.room.status,
         checkInDate: dateFormatter.format(booking.checkInDate),
         checkOutDate: dateFormatter.format(booking.checkOutDate),
         totalAmount: booking.totalAmount.toString(),
@@ -46,6 +54,25 @@ export default async function BookingsPage({
         checkOutInput: toDateInputValue(booking.checkOutDate),
         status: booking.status,
         createdAt: dateFormatter.format(booking.createdAt),
+        createdAtFull: dateTimeFormatter.format(booking.createdAt),
+        createdByName: booking.createdBy.fullName,
+        guestPhoneNumber: booking.guest.phoneNumber,
+        guestEmail: booking.guest.email,
+        guestAddress: booking.guest.address,
+        paymentAmount: booking.payment?.amount.toString() ?? null,
+        paymentMethod: booking.payment?.method ?? null,
+        paymentDate: booking.payment
+          ? dateFormatter.format(booking.payment.paymentDate)
+          : null,
+        paymentRecordedByName: booking.payment?.recordedBy.fullName ?? null,
+        checkedInAt: booking.checkedInAt
+          ? dateTimeFormatter.format(booking.checkedInAt)
+          : null,
+        checkedInByName: booking.checkedInBy?.fullName ?? null,
+        checkedOutAt: booking.checkedOutAt
+          ? dateTimeFormatter.format(booking.checkedOutAt)
+          : null,
+        checkedOutByName: booking.checkedOutBy?.fullName ?? null,
       }))}
       error={error}
       guests={options.guests.map((guest) => ({
