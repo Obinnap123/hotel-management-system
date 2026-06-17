@@ -1,19 +1,19 @@
-import { UserRole, UserStatus } from "@prisma/client";
 import { z } from "zod";
+import { userRoleValues, userStatusValues } from "@/lib/domain/hms-enums";
 
 export const createUserSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required."),
   email: z.email("Enter a valid email address.").trim().toLowerCase(),
   password: z.string().min(8, "Password must be at least 8 characters."),
-  role: z.enum([UserRole.ADMIN, UserRole.RECEPTIONIST]),
-  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE]),
+  role: z.enum(userRoleValues),
+  status: z.enum(userStatusValues),
 });
 
 export const updateUserSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required."),
   email: z.email("Enter a valid email address.").trim().toLowerCase(),
-  role: z.enum([UserRole.ADMIN, UserRole.RECEPTIONIST]),
-  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE]),
+  role: z.enum(userRoleValues),
+  status: z.enum(userStatusValues),
 });
 
 export const userIdSchema = z.object({

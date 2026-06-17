@@ -1,12 +1,6 @@
-import { PaymentMethod } from "@prisma/client";
 import { z } from "zod";
 import { toDate } from "@/features/bookings/validation";
-
-export const paymentMethodValues = [
-  PaymentMethod.CASH,
-  PaymentMethod.TRANSFER,
-  PaymentMethod.POS,
-] as const;
+import { paymentMethodValues } from "@/lib/domain/hms-enums";
 
 export const paymentFormSchema = z
   .object({

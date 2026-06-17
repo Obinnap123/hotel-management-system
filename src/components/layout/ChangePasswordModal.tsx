@@ -11,6 +11,7 @@ import {
   changeOwnPasswordAction,
   type UserActionState,
 } from "@/features/users/actions";
+import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 
 const initialActionState: UserActionState = {
@@ -58,15 +59,9 @@ export function ChangePasswordModal({ trigger }: ChangePasswordModalProps) {
     >
       <form action={formAction} className="space-y-4" onKeyDown={handleKeyDown}>
         {state.message ? (
-          <p
-            className={`rounded-md border px-3 py-2 text-sm ${
-              state.ok
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-red-200 bg-red-50 text-red-700"
-            }`}
-          >
+          <AutoDismissMessage variant={state.ok ? "success" : "error"}>
             {state.message}
-          </p>
+          </AutoDismissMessage>
         ) : null}
 
         <label className="block">

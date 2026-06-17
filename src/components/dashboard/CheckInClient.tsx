@@ -3,6 +3,7 @@
 import { LogIn, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { checkInBookingAction } from "@/features/check-ins/actions";
+import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 
 export type CheckInTableItem = {
   id: string;
@@ -53,15 +54,15 @@ export function CheckInClient({
       </div>
 
       {notice ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <AutoDismissMessage variant="success">
           {notice}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       {error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <AutoDismissMessage variant="error">
           {error}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
@@ -76,7 +77,7 @@ export function CheckInClient({
           />
         </label>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="dashboard-table-scroll mt-4">
           <table className="w-full min-w-[920px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">

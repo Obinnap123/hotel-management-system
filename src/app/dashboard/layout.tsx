@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { canAccessPath } from "@/lib/auth/permissions";
 import { getCurrentSession } from "@/server/auth/session";
+import { getHotelSettings } from "@/features/settings/queries";
 
 const navigationItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -28,18 +29,21 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const settings = await getHotelSettings();
   const visibleNavigationItems = navigationItems.filter((item) =>
     canAccessPath(session.role, item.href),
   );
 
   return (
-    <div className="min-h-screen bg-zinc-100 text-zinc-950">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-zinc-200 bg-white px-4 py-5 lg:block">
-        <div className="mb-8">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-zinc-100 text-zinc-950">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-zinc-200 bg-white px-4 py-5 xl:block">
+        <div className="mb-8 min-w-0">
           <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
             HMS
           </p>
-          <h1 className="mt-1 text-lg font-semibold">Hotel Management</h1>
+          <h1 className="mt-1 break-words text-lg font-semibold">
+            {settings.hotelName}
+          </h1>
         </div>
 
         <nav className="space-y-1">
@@ -55,12 +59,12 @@ export default async function DashboardLayout({
         </nav>
       </aside>
 
-      <div className="lg:pl-64">
+      <div className="min-w-0 max-w-full overflow-x-hidden xl:pl-64">
         <header className="border-b border-zinc-200 bg-white px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <p className="text-sm text-zinc-500">Signed in as</p>
-              <p className="font-medium">
+              <p className="break-words font-medium">
                 {session.fullName} ({session.role})
               </p>
             </div>
@@ -72,7 +76,7 @@ export default async function DashboardLayout({
             />
           </div>
 
-          <nav className="mt-4 flex gap-2 overflow-x-auto lg:hidden">
+          <nav className="mt-4 flex max-w-full gap-2 overflow-x-auto xl:hidden">
             {visibleNavigationItems.map((item) => (
               <Link
                 className="whitespace-nowrap rounded-md border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700"
@@ -85,7 +89,9 @@ export default async function DashboardLayout({
           </nav>
         </header>
 
-        <main className="px-4 py-6 sm:px-6">{children}</main>
+        <main className="min-w-0 max-w-full overflow-x-hidden px-4 py-6 sm:px-6">
+          {children}
+        </main>
       </div>
     </div>
   );

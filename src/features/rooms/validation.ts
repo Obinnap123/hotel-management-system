@@ -1,12 +1,5 @@
-import { RoomStatus } from "@prisma/client";
 import { z } from "zod";
-
-export const roomStatusValues = [
-  RoomStatus.AVAILABLE,
-  RoomStatus.RESERVED,
-  RoomStatus.OCCUPIED,
-  RoomStatus.MAINTENANCE,
-] as const;
+import { roomStatusValues } from "@/lib/domain/hms-enums";
 
 export const roomFormSchema = z.object({
   roomNumber: z.string().trim().min(1, "Room number is required."),

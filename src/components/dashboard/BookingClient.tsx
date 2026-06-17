@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  BookingStatus,
-  type PaymentMethod,
-  type RoomStatus,
-} from "@prisma/client";
 import { Edit, Eye, Plus, Search, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -20,7 +15,15 @@ import {
   updateBookingAction,
   type BookingActionState,
 } from "@/features/bookings/actions";
+import {
+  bookingStatusValues,
+  editableBookingStatuses,
+  type BookingStatusValue,
+  type PaymentMethodValue,
+  type RoomStatusValue,
+} from "@/lib/domain/hms-enums";
 import { BookingDetailsModal } from "@/components/dashboard/BookingDetailsModal";
+import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 
 export type BookingTableItem = {
@@ -32,13 +35,13 @@ export type BookingTableItem = {
   roomTypeName: string;
   roomPricePerNight: string;
   roomCapacity: number;
-  roomStatus: RoomStatus;
+  roomStatus: RoomStatusValue;
   checkInDate: string;
   checkOutDate: string;
   totalAmount: string;
   checkInInput: string;
   checkOutInput: string;
-  status: BookingStatus;
+  status: BookingStatusValue;
   createdAt: string;
   createdAtFull: string;
   createdByName: string;
@@ -46,7 +49,7 @@ export type BookingTableItem = {
   guestEmail: string | null;
   guestAddress: string | null;
   paymentAmount: string | null;
-  paymentMethod: PaymentMethod | null;
+  paymentMethod: PaymentMethodValue | null;
   paymentDate: string | null;
   paymentRecordedByName: string | null;
   checkedInAt: string | null;
@@ -75,18 +78,9 @@ type BookingClientProps = {
   error?: string;
 };
 
-const bookingStatusValues = [
-  BookingStatus.PENDING,
-  BookingStatus.CONFIRMED,
-  BookingStatus.CHECKED_IN,
-  BookingStatus.CHECKED_OUT,
-  BookingStatus.CANCELLED,
-] as const;
-
-const editableStatuses: BookingStatus[] = [
-  BookingStatus.PENDING,
-  BookingStatus.CONFIRMED,
-];
+const editableStatusSet: ReadonlySet<BookingStatusValue> = new Set(
+  editableBookingStatuses,
+);
 
 const initialActionState: BookingActionState = {
   ok: false,
@@ -132,15 +126,15 @@ export function BookingClient({
       </div>
 
       {notice ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <AutoDismissMessage variant="success">
           {notice}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       {error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <AutoDismissMessage variant="error">
           {error}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
@@ -170,7 +164,7 @@ export function BookingClient({
           </select>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="dashboard-table-scroll mt-4">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">
@@ -300,7 +294,7 @@ function EditBookingDialog({
   guests: BookingGuestOption[];
   rooms: BookingRoomOption[];
 }) {
-  const canEdit = editableStatuses.includes(booking.status);
+  const canEdit = editableStatusSet.has(booking.status);
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateBookingAction.bind(null, booking.id),
@@ -374,9 +368,9 @@ function BookingForm({
   return (
     <form action={action} className="space-y-4" onKeyDown={handleKeyDown}>
       {state.message && !state.ok ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <AutoDismissMessage variant="error">
           {state.message}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <label className="block">
@@ -470,7 +464,7 @@ function BookingForm({
 }
 
 function CancelBookingForm({ booking }: { booking: BookingTableItem }) {
-  const canCancel = editableStatuses.includes(booking.status);
+  const canCancel = editableStatusSet.has(booking.status);
 
   return (
     <form action={cancelBookingAction}>
@@ -492,8 +486,8 @@ function CancelBookingForm({ booking }: { booking: BookingTableItem }) {
   );
 }
 
-function BookingStatusBadge({ status }: { status: BookingStatus }) {
-  const styles: Record<BookingStatus, string> = {
+function BookingStatusBadge({ status }: { status: BookingStatusValue }) {
+  const styles: Record<BookingStatusValue, string> = {
     PENDING: "border-amber-200 bg-amber-50 text-amber-700",
     CONFIRMED: "border-emerald-200 bg-emerald-50 text-emerald-700",
     CHECKED_IN: "border-sky-200 bg-sky-50 text-sky-700",

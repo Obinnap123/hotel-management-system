@@ -1,6 +1,5 @@
 "use client";
 
-import { RoomStatus } from "@prisma/client";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -16,7 +15,11 @@ import {
   updateRoomAction,
   type ActionState,
 } from "@/features/rooms/actions";
-import { roomStatusValues } from "@/features/rooms/validation";
+import {
+  roomStatusValues,
+  type RoomStatusValue,
+} from "@/lib/domain/hms-enums";
+import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
@@ -27,7 +30,7 @@ export type RoomTableItem = {
   roomTypeName: string;
   pricePerNight: string;
   capacity: number;
-  status: RoomStatus;
+  status: RoomStatusValue;
   bookingCount: number;
 };
 
@@ -41,6 +44,7 @@ type RoomClientProps = {
   roomTypes: RoomTypeOption[];
   isAdmin: boolean;
   notice?: string;
+  error?: string;
 };
 
 const initialActionState: ActionState = {
@@ -54,6 +58,7 @@ export function RoomClient({
   roomTypes,
   isAdmin,
   notice,
+  error,
 }: RoomClientProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -89,9 +94,15 @@ export function RoomClient({
       </div>
 
       {notice ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <AutoDismissMessage variant="success">
           {notice}
-        </p>
+        </AutoDismissMessage>
+      ) : null}
+
+      {error ? (
+        <AutoDismissMessage variant="error">
+          {error}
+        </AutoDismissMessage>
       ) : null}
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
@@ -121,7 +132,7 @@ export function RoomClient({
           </select>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="dashboard-table-scroll mt-4">
           <table className="w-full min-w-[760px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">
@@ -268,11 +279,9 @@ function RoomForm({
   return (
     <form action={action} className="space-y-4" onKeyDown={handleKeyDown}>
       {state.message && !state.ok ? (
-        <p
-          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-        >
+        <AutoDismissMessage variant="error">
           {state.message}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -337,7 +346,7 @@ function RoomForm({
         </span>
         <select
           className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-zinc-900"
-          defaultValue={room?.status ?? RoomStatus.AVAILABLE}
+          defaultValue={room?.status ?? "AVAILABLE"}
           name="status"
           required
         >

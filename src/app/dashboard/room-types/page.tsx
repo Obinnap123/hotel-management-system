@@ -13,6 +13,12 @@ const successMessages: Record<string, string> = {
   "room-type-deleted": "Room type deleted.",
 };
 
+const errorMessages: Record<string, string> = {
+  "delete-room-type": "Room type could not be deleted.",
+  "missing-room-type": "Select a room type before continuing.",
+  "room-type-has-rooms": "Room types with rooms cannot be deleted.",
+};
+
 export default async function RoomTypesPage({
   searchParams,
 }: RoomTypesPageProps) {
@@ -20,9 +26,13 @@ export default async function RoomTypesPage({
 
   const [roomTypes, params] = await Promise.all([getRoomTypes(), searchParams]);
   const notice = params?.success ? successMessages[params.success] : undefined;
+  const error = params?.error
+    ? errorMessages[params.error] ?? decodeURIComponent(params.error)
+    : undefined;
 
   return (
     <RoomTypeClient
+      error={error}
       notice={notice}
       roomTypes={roomTypes.map((roomType) => ({
         id: roomType.id,

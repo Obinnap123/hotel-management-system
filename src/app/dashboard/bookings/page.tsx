@@ -24,6 +24,11 @@ const successMessages: Record<string, string> = {
   "booking-cancelled": "Booking cancelled.",
 };
 
+const errorMessages: Record<string, string> = {
+  "cancel-booking": "Booking could not be cancelled.",
+  "missing-booking": "Select a valid booking before continuing.",
+};
+
 export default async function BookingsPage({
   searchParams,
 }: BookingsPageProps) {
@@ -33,7 +38,9 @@ export default async function BookingsPage({
     searchParams,
   ]);
   const notice = params?.success ? successMessages[params.success] : undefined;
-  const error = params?.error ? decodeURIComponent(params.error) : undefined;
+  const error = params?.error
+    ? errorMessages[params.error] ?? decodeURIComponent(params.error)
+    : undefined;
 
   return (
     <BookingClient

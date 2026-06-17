@@ -19,9 +19,9 @@ const successMessages: Record<string, string> = {
 };
 
 const errorMessages: Record<string, string> = {
-  "invalid-user": "Unable to update staff account.",
-  "activate-failed": "Unable to activate staff account.",
-  "deactivate-failed": "Unable to deactivate staff account.",
+  "activate-failed": "Staff account could not be activated.",
+  "deactivate-failed": "Staff account could not be deactivated.",
+  "invalid-user": "Select a valid staff account before continuing.",
 };
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {

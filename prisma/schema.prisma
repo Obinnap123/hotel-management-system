@@ -145,3 +145,17 @@ model Payment {
   @@index([recordedById])
   @@index([paymentDate])
 }
+
+model HotelSettings {
+  id                  String   @id @default(cuid())
+  singletonKey        String   @unique @default("default")
+  hotelName           String   @default("Hotel Management")
+  phoneNumber         String   @default("")
+  emailAddress        String   @default("")
+  physicalAddress     String   @default("")
+  defaultCheckInTime  String   @default("14:00")
+  defaultCheckOutTime String   @default("12:00")
+  currency            String   @default("NGN")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}

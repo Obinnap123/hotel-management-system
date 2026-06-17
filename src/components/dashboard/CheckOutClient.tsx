@@ -1,10 +1,11 @@
 "use client";
 
-import { BookingStatus } from "@prisma/client";
 import { LogOut, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { checkOutBookingAction } from "@/features/check-outs/actions";
+import type { BookingStatusValue } from "@/lib/domain/hms-enums";
+import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 
 export type CheckOutTableItem = {
@@ -15,7 +16,8 @@ export type CheckOutTableItem = {
   roomTypeName: string;
   checkInDate: string;
   plannedCheckOutDate: string;
-  status: BookingStatus;
+  isEarlyCheckOut: boolean;
+  status: BookingStatusValue;
 };
 
 type CheckOutClientProps = {
@@ -56,15 +58,15 @@ export function CheckOutClient({
       </div>
 
       {notice ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <AutoDismissMessage variant="success">
           {notice}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       {error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <AutoDismissMessage variant="error">
           {error}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
@@ -79,7 +81,7 @@ export function CheckOutClient({
           />
         </label>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="dashboard-table-scroll mt-4">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">
@@ -183,11 +185,16 @@ function CheckOutDialog({ booking }: { booking: CheckOutTableItem }) {
         </div>
 
         <div className="space-y-2 text-sm text-zinc-700">
+          {booking.isEarlyCheckOut ? (
+            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
+              This guest is checking out before the planned checkout date.
+            </p>
+          ) : null}
           <p>This action will:</p>
-          <p>✓ Mark booking as CHECKED_OUT</p>
-          <p>✓ Mark room as AVAILABLE</p>
-          <p>✓ Record checkout time</p>
-          <p>✓ Record staff who performed checkout</p>
+          <p>- Mark booking as CHECKED_OUT</p>
+          <p>- Mark room as AVAILABLE</p>
+          <p>- Record checkout time</p>
+          <p>- Record staff who performed checkout</p>
         </div>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

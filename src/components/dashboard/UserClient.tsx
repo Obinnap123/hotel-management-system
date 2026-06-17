@@ -1,6 +1,5 @@
 "use client";
 
-import { UserRole, UserStatus } from "@prisma/client";
 import {
   Edit,
   Eye,
@@ -28,15 +27,20 @@ import {
   type ResetPasswordActionState,
   type UserActionState,
 } from "@/features/users/actions";
+import {
+  type UserRoleValue,
+  type UserStatusValue,
+} from "@/lib/domain/hms-enums";
 import { UserDetailsModal } from "@/components/dashboard/UserDetailsModal";
+import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 
 export type StaffTableItem = {
   id: string;
   fullName: string;
   email: string;
-  role: UserRole;
-  status: UserStatus;
+  role: UserRoleValue;
+  status: UserStatusValue;
   createdAt: string;
   bookingsCreatedCount: number;
   paymentsRecordedCount: number;
@@ -95,15 +99,15 @@ export function UserClient({ users, notice, error }: UserClientProps) {
       </div>
 
       {notice ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <AutoDismissMessage variant="success">
           {notice}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       {error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <AutoDismissMessage variant="error">
           {error}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
@@ -118,7 +122,7 @@ export function UserClient({ users, notice, error }: UserClientProps) {
           />
         </label>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="dashboard-table-scroll mt-4">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">
@@ -259,9 +263,9 @@ function UserForm({
   return (
     <form action={action} className="space-y-4" onKeyDown={handleKeyDown}>
       {state.message && !state.ok ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <AutoDismissMessage variant="error">
           {state.message}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <label className="block">
@@ -303,12 +307,12 @@ function UserForm({
           <span className="text-sm font-medium text-zinc-800">Role</span>
           <select
             className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-zinc-900"
-            defaultValue={user?.role ?? UserRole.RECEPTIONIST}
+            defaultValue={user?.role ?? "RECEPTIONIST"}
             name="role"
             required
           >
-            <option value={UserRole.ADMIN}>ADMIN</option>
-            <option value={UserRole.RECEPTIONIST}>RECEPTIONIST</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="RECEPTIONIST">RECEPTIONIST</option>
           </select>
         </label>
 
@@ -316,12 +320,12 @@ function UserForm({
           <span className="text-sm font-medium text-zinc-800">Status</span>
           <select
             className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-zinc-900"
-            defaultValue={user?.status ?? UserStatus.ACTIVE}
+            defaultValue={user?.status ?? "ACTIVE"}
             name="status"
             required
           >
-            <option value={UserStatus.ACTIVE}>ACTIVE</option>
-            <option value={UserStatus.INACTIVE}>INACTIVE</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
           </select>
         </label>
       </div>
@@ -339,7 +343,7 @@ function UserForm({
 
 function ActivationDialog({ user }: { user: StaffTableItem }) {
   const [open, setOpen] = useState(false);
-  const isActive = user.status === UserStatus.ACTIVE;
+  const isActive = user.status === "ACTIVE";
   const action = isActive ? deactivateUserAction : activateUserAction;
   const title = isActive
     ? `Deactivate ${user.fullName}?`
@@ -394,9 +398,13 @@ function ActivationSubmitButton({ label }: { label: string }) {
       disabled={pending}
       type="submit"
     >
-      {pending ? `${label}ing. . .` : label}
+      {pending ? getActivationPendingLabel(label) : label}
     </button>
   );
+}
+
+function getActivationPendingLabel(label: string) {
+  return label === "Deactivate" ? "Deactivating. . ." : "Activating. . .";
 }
 
 function ResetPasswordDialog({ user }: { user: StaffTableItem }) {
@@ -425,15 +433,9 @@ function ResetPasswordDialog({ user }: { user: StaffTableItem }) {
     >
       <form action={formAction} className="space-y-5">
         {state.message ? (
-          <p
-            className={`rounded-md border px-3 py-2 text-sm ${
-              state.ok
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-red-200 bg-red-50 text-red-700"
-            }`}
-          >
+          <AutoDismissMessage variant={state.ok ? "success" : "error"}>
             {state.message}
-          </p>
+          </AutoDismissMessage>
         ) : null}
 
         {state.temporaryPassword ? (
@@ -475,8 +477,8 @@ function ResetPasswordDialog({ user }: { user: StaffTableItem }) {
   );
 }
 
-function UserStatusBadge({ status }: { status: UserStatus }) {
-  const styles: Record<UserStatus, string> = {
+function UserStatusBadge({ status }: { status: UserStatusValue }) {
+  const styles: Record<UserStatusValue, string> = {
     ACTIVE: "border-emerald-200 bg-emerald-50 text-emerald-700",
     INACTIVE: "border-zinc-300 bg-zinc-100 text-zinc-700",
   };

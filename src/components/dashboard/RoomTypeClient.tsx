@@ -14,6 +14,7 @@ import {
   updateRoomTypeAction,
   type ActionState,
 } from "@/features/rooms/actions";
+import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 
 export type RoomTypeTableItem = {
@@ -26,6 +27,7 @@ export type RoomTypeTableItem = {
 type RoomTypeClientProps = {
   roomTypes: RoomTypeTableItem[];
   notice?: string;
+  error?: string;
 };
 
 const initialActionState: ActionState = {
@@ -34,7 +36,11 @@ const initialActionState: ActionState = {
   submissionId: "",
 };
 
-export function RoomTypeClient({ roomTypes, notice }: RoomTypeClientProps) {
+export function RoomTypeClient({
+  error,
+  notice,
+  roomTypes,
+}: RoomTypeClientProps) {
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -48,13 +54,19 @@ export function RoomTypeClient({ roomTypes, notice }: RoomTypeClientProps) {
       </div>
 
       {notice ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <AutoDismissMessage variant="success">
           {notice}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
-      <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
+      {error ? (
+        <AutoDismissMessage variant="error">
+          {error}
+        </AutoDismissMessage>
+      ) : null}
+
+      <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
+        <div className="dashboard-table-scroll">
           <table className="w-full min-w-[680px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">
@@ -180,11 +192,9 @@ function RoomTypeForm({
   return (
     <form action={action} className="space-y-4" onKeyDown={handleKeyDown}>
       {state.message && !state.ok ? (
-        <p
-          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-        >
+        <AutoDismissMessage variant="error">
           {state.message}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <label className="block">

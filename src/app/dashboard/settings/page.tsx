@@ -1,10 +1,23 @@
-import { PageShell } from "@/components/layout/page-shell";
+import { SettingsClient } from "@/components/dashboard/SettingsClient";
+import { requireAdmin } from "@/features/rooms/authorization";
+import { getHotelSettings } from "@/features/settings/queries";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  await requireAdmin();
+
+  const settings = await getHotelSettings();
+
   return (
-    <PageShell
-      title="Settings"
-      description="Admin-only hotel configuration will be built here later."
+    <SettingsClient
+      settings={{
+        hotelName: settings.hotelName,
+        phoneNumber: settings.phoneNumber,
+        emailAddress: settings.emailAddress,
+        physicalAddress: settings.physicalAddress,
+        defaultCheckInTime: settings.defaultCheckInTime,
+        defaultCheckOutTime: settings.defaultCheckOutTime,
+        currency: settings.currency,
+      }}
     />
   );
 }

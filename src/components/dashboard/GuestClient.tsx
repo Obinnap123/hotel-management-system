@@ -14,6 +14,7 @@ import {
   updateGuestAction,
   type GuestActionState,
 } from "@/features/guests/actions";
+import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 
 export type GuestTableItem = {
@@ -78,7 +79,7 @@ export function GuestClient({ guests }: GuestClientProps) {
           />
         </label>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="dashboard-table-scroll mt-4">
           <table className="w-full min-w-[820px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">
@@ -210,9 +211,9 @@ function GuestForm({
   return (
     <form action={action} className="space-y-4" onKeyDown={handleKeyDown}>
       {state.message && !state.ok ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <AutoDismissMessage variant="error">
           {state.message}
-        </p>
+        </AutoDismissMessage>
       ) : null}
 
       <label className="block">

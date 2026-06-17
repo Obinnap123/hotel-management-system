@@ -15,6 +15,14 @@ const successMessages: Record<string, string> = {
   "status-updated": "Room status updated.",
 };
 
+const errorMessages: Record<string, string> = {
+  "delete-room": "Room could not be deleted. Check existing records.",
+  "invalid-status": "Select a valid room status.",
+  "missing-room": "Select a room before continuing.",
+  "room-has-bookings": "Rooms with bookings cannot be deleted.",
+  "status-update": "Room status could not be updated.",
+};
+
 export default async function RoomsPage({ searchParams }: RoomsPageProps) {
   const [rooms, roomTypes, session, params] = await Promise.all([
     getRooms(),
@@ -23,9 +31,13 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
     searchParams,
   ]);
   const notice = params?.success ? successMessages[params.success] : undefined;
+  const error = params?.error
+    ? errorMessages[params.error] ?? decodeURIComponent(params.error)
+    : undefined;
 
   return (
     <RoomClient
+      error={error}
       isAdmin={Boolean(session && isAdminRole(session.role))}
       notice={notice}
       roomTypes={roomTypes.map((roomType) => ({

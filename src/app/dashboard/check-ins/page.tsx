@@ -16,6 +16,11 @@ const successMessages: Record<string, string> = {
   "checked-in": "Guest checked in successfully.",
 };
 
+const errorMessages: Record<string, string> = {
+  "check-in-failed": "Unable to check in guest. Please try again.",
+  "invalid-booking": "Select a valid booking before checking in.",
+};
+
 export default async function CheckInsPage({
   searchParams,
 }: CheckInsPageProps) {
@@ -24,7 +29,9 @@ export default async function CheckInsPage({
     searchParams,
   ]);
   const notice = params?.success ? successMessages[params.success] : undefined;
-  const error = params?.error ? decodeURIComponent(params.error) : undefined;
+  const error = params?.error
+    ? errorMessages[params.error] ?? decodeURIComponent(params.error)
+    : undefined;
 
   return (
     <CheckInClient

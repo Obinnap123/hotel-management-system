@@ -18,12 +18,13 @@ const successMessages: Record<string, string> = {
 
 const errorMessages: Record<string, string> = {
   "checkout-failed": "Unable to check out guest. Please try again.",
-  "invalid-booking": "Unable to check out guest. Please try again.",
+  "invalid-booking": "Select a valid booking before checking out.",
 };
 
 export default async function CheckOutsPage({
   searchParams,
 }: CheckOutsPageProps) {
+  const todayStart = startOfDay(new Date());
   const [bookings, params] = await Promise.all([
     getBookingsReadyForCheckOut(),
     searchParams,
@@ -43,6 +44,7 @@ export default async function CheckOutsPage({
         roomTypeName: booking.room.roomType.name,
         checkInDate: dateFormatter.format(booking.checkInDate),
         plannedCheckOutDate: dateFormatter.format(booking.checkOutDate),
+        isEarlyCheckOut: startOfDay(booking.checkOutDate) > todayStart,
         status: booking.status,
       }))}
       error={error}
@@ -53,4 +55,8 @@ export default async function CheckOutsPage({
 
 function formatBookingNumber(id: string) {
   return `BK-${id.slice(-6).toUpperCase()}`;
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
