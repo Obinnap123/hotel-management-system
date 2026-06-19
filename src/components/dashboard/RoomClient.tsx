@@ -79,7 +79,7 @@ export function RoomClient({
   }, [rooms, search, statusFilter]);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-zinc-950">Rooms</h2>
@@ -105,7 +105,7 @@ export function RoomClient({
         </AutoDismissMessage>
       ) : null}
 
-      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+      <section className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <label className="relative block md:w-80">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
@@ -132,7 +132,46 @@ export function RoomClient({
           </select>
         </div>
 
-        <div className="dashboard-table-scroll mt-4">
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:hidden">
+          {filteredRooms.map((room) => (
+            <div
+              className="rounded-md border border-zinc-200 p-3"
+              key={room.id}
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="break-words font-medium text-zinc-950">
+                    Room {room.roomNumber}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-600">
+                    {room.roomTypeName} · Capacity {room.capacity}
+                  </p>
+                </div>
+                <StatusBadge status={room.status} />
+              </div>
+
+              <div className="mt-3 flex min-w-0 items-center justify-between gap-3">
+                <p className="text-sm font-medium text-zinc-800">
+                  NGN {Number(room.pricePerNight).toLocaleString()}/night
+                </p>
+                {isAdmin ? (
+                  <div className="flex shrink-0 gap-2">
+                    <EditRoomDialog room={room} roomTypes={roomTypes} />
+                    <DeleteRoomForm room={room} />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ))}
+
+          {filteredRooms.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-500">
+              No rooms match your search.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="dashboard-table-scroll mt-4 hidden lg:block">
           <table className="w-full min-w-[760px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">

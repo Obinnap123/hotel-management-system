@@ -76,7 +76,7 @@ export function PaymentClient({
   }, [payments, search]);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-zinc-950">Payments</h2>
@@ -88,7 +88,7 @@ export function PaymentClient({
         <RecordPaymentDialog eligibleBookings={eligibleBookings} />
       </div>
 
-      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+      <section className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
         <label className="relative block max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
@@ -100,7 +100,45 @@ export function PaymentClient({
           />
         </label>
 
-        <div className="dashboard-table-scroll mt-4">
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:hidden">
+          {filteredPayments.map((payment) => (
+            <div
+              className="rounded-md border border-zinc-200 p-3"
+              key={payment.id}
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="break-words font-medium text-zinc-950">
+                    {payment.bookingNumber}
+                  </p>
+                  <p className="mt-1 break-words text-sm text-zinc-600">
+                    {payment.guestName} · Room {payment.roomNumber}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-700">
+                  {payment.method}
+                </span>
+              </div>
+              <div className="mt-3 space-y-1 text-sm text-zinc-600">
+                <p className="font-medium text-zinc-800">
+                  NGN {Number(payment.amount).toLocaleString()}
+                </p>
+                <p className="break-words">Recorded by {payment.recordedBy}</p>
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  {payment.paymentDate}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {filteredPayments.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-500">
+              No payments match your search.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="dashboard-table-scroll mt-4 hidden lg:block">
           <table className="w-full min-w-[920px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">

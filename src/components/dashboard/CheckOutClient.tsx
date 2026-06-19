@@ -49,7 +49,7 @@ export function CheckOutClient({
   }, [bookings, search]);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <div>
         <h2 className="text-2xl font-semibold text-zinc-950">Check-Outs</h2>
         <p className="mt-1 text-sm text-zinc-600">
@@ -69,7 +69,7 @@ export function CheckOutClient({
         </AutoDismissMessage>
       ) : null}
 
-      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+      <section className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
         <label className="relative block max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
@@ -81,7 +81,46 @@ export function CheckOutClient({
           />
         </label>
 
-        <div className="dashboard-table-scroll mt-4">
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:hidden">
+          {filteredBookings.map((booking) => (
+            <div
+              className="rounded-md border border-zinc-200 p-3"
+              key={booking.id}
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="break-words font-medium text-zinc-950">
+                    {booking.bookingNumber}
+                  </p>
+                  <p className="mt-1 break-words text-sm text-zinc-600">
+                    {booking.guestName} · Room {booking.roomNumber}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+                  {booking.status.replace("_", " ")}
+                </span>
+              </div>
+
+              <div className="mt-3 space-y-1 text-sm text-zinc-600">
+                <p>{booking.roomTypeName}</p>
+                <p>Checked in {booking.checkInDate}</p>
+                <p>Planned checkout {booking.plannedCheckOutDate}</p>
+              </div>
+
+              <div className="mt-3 flex justify-end">
+                <CheckOutDialog booking={booking} />
+              </div>
+            </div>
+          ))}
+
+          {filteredBookings.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-500">
+              No guests are currently checked in.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="dashboard-table-scroll mt-4 hidden lg:block">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">

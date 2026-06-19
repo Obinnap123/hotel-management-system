@@ -45,7 +45,7 @@ export function CheckInClient({
   }, [bookings, search]);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <div>
         <h2 className="text-2xl font-semibold text-zinc-950">Check-Ins</h2>
         <p className="mt-1 text-sm text-zinc-600">
@@ -65,7 +65,7 @@ export function CheckInClient({
         </AutoDismissMessage>
       ) : null}
 
-      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+      <section className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
         <label className="relative block max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
@@ -77,7 +77,57 @@ export function CheckInClient({
           />
         </label>
 
-        <div className="dashboard-table-scroll mt-4">
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:hidden">
+          {filteredBookings.map((booking) => (
+            <div
+              className="rounded-md border border-zinc-200 p-3"
+              key={booking.id}
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="break-words font-medium text-zinc-950">
+                    {booking.bookingNumber}
+                  </p>
+                  <p className="mt-1 break-words text-sm text-zinc-600">
+                    {booking.guestName} · Room {booking.roomNumber}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  PAID
+                </span>
+              </div>
+
+              <div className="mt-3 space-y-1 text-sm text-zinc-600">
+                <p>{booking.roomTypeName}</p>
+                <p>
+                  {booking.checkInDate} to {booking.checkOutDate}
+                </p>
+                <p className="font-medium text-zinc-800">
+                  NGN {Number(booking.amountPaid).toLocaleString()}
+                </p>
+              </div>
+
+              <form action={checkInBookingAction} className="mt-3 flex justify-end">
+                <input name="bookingId" type="hidden" value={booking.id} />
+                <button
+                  className="inline-flex h-9 items-center gap-2 rounded-md bg-zinc-950 px-3 text-sm font-medium text-white transition hover:bg-zinc-800"
+                  type="submit"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Check In
+                </button>
+              </form>
+            </div>
+          ))}
+
+          {filteredBookings.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-500">
+              No bookings are ready for check-in.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="dashboard-table-scroll mt-4 hidden lg:block">
           <table className="w-full min-w-[920px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">

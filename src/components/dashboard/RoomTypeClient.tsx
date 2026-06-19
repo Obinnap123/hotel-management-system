@@ -42,7 +42,7 @@ export function RoomTypeClient({
   roomTypes,
 }: RoomTypeClientProps) {
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-zinc-950">Room Types</h2>
@@ -65,8 +65,42 @@ export function RoomTypeClient({
         </AutoDismissMessage>
       ) : null}
 
-      <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
-        <div className="dashboard-table-scroll">
+      <section className="min-w-0 rounded-lg border border-zinc-200 bg-white shadow-sm">
+        <div className="grid gap-3 p-4 md:grid-cols-2 lg:hidden">
+          {roomTypes.map((roomType) => (
+            <div
+              className="rounded-md border border-zinc-200 p-3"
+              key={roomType.id}
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="break-words font-medium text-zinc-950">
+                    {roomType.name}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-600">
+                    {roomType.roomCount} room
+                    {roomType.roomCount === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <EditRoomTypeDialog roomType={roomType} />
+                  <DeleteRoomTypeForm roomType={roomType} />
+                </div>
+              </div>
+              <p className="mt-3 break-words text-sm text-zinc-600">
+                {roomType.description || "No description"}
+              </p>
+            </div>
+          ))}
+
+          {roomTypes.length === 0 ? (
+            <p className="py-8 text-center text-sm text-zinc-500">
+              No room types have been created.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="dashboard-table-scroll hidden lg:block">
           <table className="w-full min-w-[680px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500">

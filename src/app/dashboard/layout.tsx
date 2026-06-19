@@ -35,13 +35,13 @@ export default async function DashboardLayout({
   );
 
   return (
-    <div className="min-h-screen max-w-full overflow-x-hidden bg-zinc-100 text-zinc-950">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-zinc-200 bg-white px-4 py-5 xl:block">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-[var(--app-bg)] text-slate-950">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-[var(--border)] bg-white/95 px-4 py-5 shadow-sm xl:block">
         <div className="mb-8 min-w-0">
-          <p className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             HMS
           </p>
-          <h1 className="mt-1 break-words text-lg font-semibold">
+          <h1 className="mt-1 break-words text-lg font-semibold tracking-tight text-slate-950">
             {settings.hotelName}
           </h1>
         </div>
@@ -49,7 +49,7 @@ export default async function DashboardLayout({
         <nav className="space-y-1">
           {visibleNavigationItems.map((item) => (
             <Link
-              className="block rounded-md px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-zinc-950"
+              className="block rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
               href={item.href}
               key={item.href}
             >
@@ -60,11 +60,13 @@ export default async function DashboardLayout({
       </aside>
 
       <div className="min-w-0 max-w-full overflow-x-hidden xl:pl-64">
-        <header className="border-b border-zinc-200 bg-white px-4 py-4 sm:px-6">
+        <header className="border-b border-[var(--border)] bg-white/95 px-4 py-4 shadow-sm sm:px-6">
           <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-sm text-zinc-500">Signed in as</p>
-              <p className="break-words font-medium">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                Signed in as
+              </p>
+              <p className="break-words font-medium text-slate-950">
                 {session.fullName} ({session.role})
               </p>
             </div>
@@ -79,7 +81,7 @@ export default async function DashboardLayout({
           <nav className="mt-4 flex max-w-full gap-2 overflow-x-auto xl:hidden">
             {visibleNavigationItems.map((item) => (
               <Link
-                className="whitespace-nowrap rounded-md border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700"
+                className="whitespace-nowrap rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-[var(--border-strong)] hover:bg-slate-50"
                 href={item.href}
                 key={item.href}
               >
