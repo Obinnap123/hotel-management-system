@@ -5,12 +5,10 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-const adapter = createPrismaAdapter();
-
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    adapter,
+    adapter: createPrismaAdapter(),
     log:
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]

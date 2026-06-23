@@ -20,81 +20,89 @@ export async function createPublicReservation(
 ): Promise<PublicReservationResult> {
   const dates = parseReservationDates(input);
 
-  return prisma.$transaction(async (tx) => {
-    const roomType = await tx.roomType.findUnique({
-      where: {
-        slug: input.roomTypeSlug,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
+  return prisma.$transaction(
+    async (tx) => {
+      const roomType = await tx.roomType.findUnique({
+        where: {
+          slug: input.roomTypeSlug,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
 
-    if (!roomType) {
-      throw new PublicReservationRuleError("Selected room type was not found.");
-    }
+      if (!roomType) {
+        throw new PublicReservationRuleError(
+          "Selected room type was not found.",
+        );
+      }
 
-    const room = await findAvailableRoomForRoomType({
-      roomTypeId: roomType.id,
-      checkInDate: dates.checkInDate,
-      checkOutDate: dates.checkOutDate,
-      tx,
-    });
-
-    if (!room) {
-      throw new PublicReservationRuleError(
-        "No rooms are available for the selected dates.",
-      );
-    }
-
-    if (input.guestCount > room.capacity) {
-      throw new PublicReservationRuleError(
-        "Number of guests exceeds this room type capacity.",
-      );
-    }
-
-    const [guest, createdById] = await Promise.all([
-      findOrCreateGuest(input, tx),
-      getPublicBookingCreatorId(tx),
-    ]);
-    const totalAmount = calculateReservationTotal({
-      checkInDate: dates.checkInDate,
-      checkOutDate: dates.checkOutDate,
-      pricePerNight: room.pricePerNight,
-    });
-
-    const booking = await tx.booking.create({
-      data: {
-        guestId: guest.id,
-        roomId: room.id,
+      const room = await findAvailableRoomForRoomType({
+        roomTypeId: roomType.id,
         checkInDate: dates.checkInDate,
         checkOutDate: dates.checkOutDate,
-        totalAmount,
-        guestCount: input.guestCount,
-        specialRequests: input.specialRequests || null,
-        createdById,
-        status: BookingStatus.PENDING,
-      },
-    });
+        tx,
+      });
 
-    await tx.room.update({
-      where: {
-        id: room.id,
-      },
-      data: {
-        status: RoomStatus.RESERVED,
-      },
-    });
+      if (!room) {
+        throw new PublicReservationRuleError(
+          "No rooms are available for the selected dates.",
+        );
+      }
 
-    return {
-      bookingId: booking.id,
-      bookingNumber: formatPublicBookingNumber(booking.id),
-      roomTypeName: roomType.name,
-      checkInDate: booking.checkInDate,
-      checkOutDate: booking.checkOutDate,
-    };
-  });
+      if (input.guestCount > room.capacity) {
+        throw new PublicReservationRuleError(
+          "Number of guests exceeds this room type capacity.",
+        );
+      }
+
+      const [guest, createdById] = await Promise.all([
+        findOrCreateGuest(input, tx),
+        getPublicBookingCreatorId(tx),
+      ]);
+      const totalAmount = calculateReservationTotal({
+        checkInDate: dates.checkInDate,
+        checkOutDate: dates.checkOutDate,
+        pricePerNight: room.pricePerNight,
+      });
+
+      const booking = await tx.booking.create({
+        data: {
+          guestId: guest.id,
+          roomId: room.id,
+          checkInDate: dates.checkInDate,
+          checkOutDate: dates.checkOutDate,
+          totalAmount,
+          guestCount: input.guestCount,
+          specialRequests: input.specialRequests || null,
+          createdById,
+          status: BookingStatus.PENDING,
+        },
+      });
+
+      await tx.room.update({
+        where: {
+          id: room.id,
+        },
+        data: {
+          status: RoomStatus.RESERVED,
+        },
+      });
+
+      return {
+        bookingId: booking.id,
+        bookingNumber: formatPublicBookingNumber(booking.id),
+        roomTypeName: roomType.name,
+        checkInDate: booking.checkInDate,
+        checkOutDate: booking.checkOutDate,
+      };
+    },
+    {
+      maxWait: 10000,
+      timeout: 15000,
+    },
+  );
 }
 
 function parseReservationDates(input: PublicReservationInput) {

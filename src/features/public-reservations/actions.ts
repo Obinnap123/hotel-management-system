@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createPublicReservation, PublicReservationRuleError } from "./service";
 import { publicReservationSchema } from "./validation";
+import { Prisma } from "@prisma/client";
 
 export type PublicReservationActionState = {
   ok: boolean;
@@ -26,6 +27,8 @@ export async function createPublicReservationAction(
     };
   }
 
+  let redirectPath = bookingSuccessPath;
+
   try {
     const reservation = await createPublicReservation(parsed.data);
     const params = new URLSearchParams({
@@ -35,7 +38,7 @@ export async function createPublicReservationAction(
       checkOut: reservation.checkOutDate.toISOString(),
     });
 
-    redirect(`${bookingSuccessPath}?${params.toString()}`);
+    redirectPath = `${bookingSuccessPath}?${params.toString()}`;
   } catch (error) {
     if (error instanceof PublicReservationRuleError) {
       return {
@@ -44,6 +47,20 @@ export async function createPublicReservationAction(
       };
     }
 
-    throw error;
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return {
+        ok: false,
+        message:
+          "Reservation could not be completed. Please try again in a moment.",
+      };
+    }
+
+    return {
+      ok: false,
+      message:
+        "Reservation could not be completed. Please try again in a moment.",
+    };
   }
+
+  redirect(redirectPath);
 }

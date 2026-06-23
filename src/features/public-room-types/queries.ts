@@ -44,8 +44,12 @@ export async function getFeaturedPublicRoomTypes(
 
   return roomTypes
     .map(toPublicRoomTypeSummary)
-    .filter((roomType) => roomType.availableRoomCount > 0)
+    .filter((roomType) => roomType.pricePerNight !== null)
     .sort((a, b) => {
+      if (a.availableRoomCount !== b.availableRoomCount) {
+        return b.availableRoomCount - a.availableRoomCount;
+      }
+
       const aHasImage = a.coverImage ? 1 : 0;
       const bHasImage = b.coverImage ? 1 : 0;
 
