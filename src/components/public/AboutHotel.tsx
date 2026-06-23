@@ -1,4 +1,4 @@
-export function AboutHotel() {
+export function AboutHotel({ hotelName }: { hotelName: string }) {
   return (
     <section className="bg-[#f7f3ed]">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8">
@@ -18,9 +18,9 @@ export function AboutHotel() {
             A refined stay experience, backed by organized hotel operations.
           </h2>
           <p className="mt-5 leading-8 text-[#5f6b7a]">
-            Obinna&apos;s Hotel brings together warm hospitality, practical
-            comfort, and a reservation process that is simple for guests and
-            immediately visible to hotel staff.
+            {hotelName} brings together warm hospitality, practical comfort,
+            and a reservation process that is simple for guests and immediately
+            visible to hotel staff.
           </p>
           <p className="mt-4 leading-8 text-[#5f6b7a]">
             Every online reservation flows into the hotel management system, so

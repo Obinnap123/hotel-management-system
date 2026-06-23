@@ -1,8 +1,10 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { buttonStyles } from "@/components/ui/button-styles";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -11,7 +13,7 @@ const navLinks = [
   { href: "/login", label: "Staff Login" },
 ];
 
-export function PublicNavbar() {
+export function PublicNavbar({ hotelName }: { hotelName: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -23,7 +25,7 @@ export function PublicNavbar() {
             href="/"
             onClick={() => setMenuOpen(false)}
           >
-          Obinna&apos;s Hotel
+            {hotelName}
           </Link>
 
           <nav className="hidden items-center gap-2 text-sm font-medium text-[#415064] md:flex">
@@ -31,7 +33,7 @@ export function PublicNavbar() {
               <Link
                 className={
                   link.href === "/book"
-                    ? "rounded-full bg-[#172033] px-4 py-2 text-white transition hover:bg-[#24314a]"
+                    ? buttonStyles({ shape: "pill", size: "sm" })
                     : "rounded-full px-3 py-2 transition hover:bg-black/5 hover:text-[#172033]"
                 }
                 href={link.href}
@@ -57,24 +59,32 @@ export function PublicNavbar() {
           </button>
         </div>
 
-        {menuOpen ? (
-          <nav className="mt-4 grid gap-2 rounded-2xl border border-black/10 bg-white p-2 text-sm font-medium text-[#415064] shadow-[0_20px_50px_rgba(23,32,51,0.12)] md:hidden">
-            {navLinks.map((link) => (
-              <Link
-                className={
-                  link.href === "/book"
-                    ? "rounded-xl bg-[#172033] px-4 py-3 text-white"
-                    : "rounded-xl px-4 py-3 transition hover:bg-[#f7f3ed] hover:text-[#172033]"
-                }
-                href={link.href}
-                key={link.href}
-                onClick={() => setMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
+        <AnimatePresence>
+          {menuOpen ? (
+            <motion.nav
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              className="mt-4 grid gap-2 overflow-hidden rounded-2xl border border-black/10 bg-white p-2 text-sm font-medium text-[#415064] shadow-[0_20px_50px_rgba(23,32,51,0.12)] md:hidden"
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              initial={{ opacity: 0, y: -8, height: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              {navLinks.map((link) => (
+                <Link
+                  className={
+                    link.href === "/book"
+                      ? "rounded-xl bg-[#172033] px-4 py-3 text-white"
+                      : "rounded-xl px-4 py-3 transition hover:bg-[#f7f3ed] hover:text-[#172033]"
+                  }
+                  href={link.href}
+                  key={link.href}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </motion.nav>
+          ) : null}
+        </AnimatePresence>
       </div>
     </header>
   );

@@ -1,15 +1,29 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 
-export function PublicFooter() {
+type PublicFooterProps = {
+  hotelName: string;
+  phoneNumber: string;
+  emailAddress: string;
+  physicalAddress: string;
+};
+
+export function PublicFooter({
+  emailAddress,
+  hotelName,
+  phoneNumber,
+  physicalAddress,
+}: PublicFooterProps) {
+  const displayAddress = physicalAddress || "Address available on request";
+  const displayPhone = phoneNumber || "Reception available on request";
+  const displayEmail = emailAddress || "reservations available on request";
+
   return (
     <footer className="border-t border-white/10 bg-[#101725] text-white">
       <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.7fr_0.9fr_0.9fr]">
           <div>
-            <p className="text-xl font-semibold tracking-tight">
-              Obinna&apos;s Hotel
-            </p>
+            <p className="text-xl font-semibold tracking-tight">{hotelName}</p>
             <p className="mt-4 max-w-sm text-sm leading-7 text-white/66">
               Elegant stays, thoughtful service, and reservations that flow
               directly into hotel operations.
@@ -62,15 +76,15 @@ export function PublicFooter() {
             <div className="mt-4 grid gap-3 text-sm text-white/68">
               <p className="flex gap-3">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
-                <span>Lagos, Nigeria</span>
+                <span>{displayAddress}</span>
               </p>
               <p className="flex gap-3">
                 <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
-                <span>Reception available on request</span>
+                <span>{displayPhone}</span>
               </p>
               <p className="flex gap-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
-                <span>reservations@obinnashotel.com</span>
+                <span>{displayEmail}</span>
               </p>
             </div>
           </div>
@@ -78,7 +92,7 @@ export function PublicFooter() {
 
         <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/48 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            &copy; {new Date().getFullYear()} Obinna&apos;s Hotel. All rights
+            &copy; {new Date().getFullYear()} {hotelName}. All rights
             reserved.
           </p>
           <p>

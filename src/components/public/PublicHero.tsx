@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HeroAvailabilitySearch } from "@/components/public/HeroAvailabilitySearch";
@@ -23,7 +24,7 @@ const heroImages = [
   },
 ];
 
-export function PublicHero() {
+export function PublicHero({ hotelName }: { hotelName: string }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
@@ -61,12 +62,17 @@ export function PublicHero() {
       </div>
 
       <div className="relative mx-auto grid min-h-[72vh] max-w-7xl items-end px-5 py-16 lg:px-8">
-        <div className="max-w-2xl">
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-2xl"
+          initial={{ opacity: 0, y: 18 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        >
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-white/75">
             Luxury hotel reservations
           </p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
-            Obinna&apos;s Hotel
+            {hotelName}
           </h1>
           <p className="mt-5 text-lg leading-8 text-white/82">
             Browse room types, check availability, and reserve your stay in a
@@ -74,20 +80,20 @@ export function PublicHero() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#172033] transition hover:bg-white/90"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#172033] shadow-sm transition hover:bg-white/90"
               href="/book"
             >
               Reserve now
             </Link>
             <Link
-              className="rounded-full border border-white/35 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-white/35 bg-transparent px-6 text-sm font-semibold text-white transition hover:bg-white/10"
               href="/rooms"
             >
               View rooms
             </Link>
           </div>
           <HeroAvailabilitySearch />
-        </div>
+        </motion.div>
       </div>
     </section>
   );

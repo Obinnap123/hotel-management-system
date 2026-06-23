@@ -1,38 +1,45 @@
 import Link from "next/link";
 import { AboutHotel } from "@/components/public/AboutHotel";
 import { HomeAmenities } from "@/components/public/HomeAmenities";
+import { MotionReveal } from "@/components/public/MotionReveal";
 import { PublicHero } from "@/components/public/PublicHero";
 import { RoomTypeCard } from "@/components/public/RoomTypeCard";
 import { Testimonials } from "@/components/public/Testimonials";
 import { getFeaturedPublicRoomTypes } from "@/features/public-room-types/queries";
+import { getHotelSettings } from "@/features/settings/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function PublicHomePage() {
-  const featuredRoomTypes = await getFeaturedPublicRoomTypes();
+  const [featuredRoomTypes, settings] = await Promise.all([
+    getFeaturedPublicRoomTypes(),
+    getHotelSettings(),
+  ]);
 
   return (
     <div>
-      <PublicHero />
+      <PublicHero hotelName={settings.hotelName} />
 
       <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#8a6f46]">
-              Featured stays
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-              Featured room types
-            </h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-[#5f6b7a]">
-              Explore room categories guests can reserve online. Current
-              availability updates as reservations are made.
-            </p>
+        <MotionReveal>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#8a6f46]">
+                Featured stays
+              </p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+                Featured room types
+              </h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-[#5f6b7a]">
+                Explore room categories guests can reserve online. Current
+                availability updates as reservations are made.
+              </p>
+            </div>
+            <Link className="text-sm font-semibold text-[#172033]" href="/rooms">
+              See all rooms
+            </Link>
           </div>
-          <Link className="text-sm font-semibold text-[#172033]" href="/rooms">
-            See all rooms
-          </Link>
-        </div>
+        </MotionReveal>
 
         {featuredRoomTypes.length > 0 ? (
           <div className="mt-8 grid gap-5 md:grid-cols-3">
@@ -54,7 +61,7 @@ export default async function PublicHomePage() {
       </section>
 
       <HomeAmenities />
-      <AboutHotel />
+      <AboutHotel hotelName={settings.hotelName} />
       <Testimonials />
     </div>
   );

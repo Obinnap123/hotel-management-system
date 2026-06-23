@@ -1,3 +1,5 @@
+import { buttonStyles } from "@/components/ui/button-styles";
+
 export function HeroAvailabilitySearch() {
   return (
     <form
@@ -37,7 +39,10 @@ export function HeroAvailabilitySearch() {
         />
       </label>
       <button
-        className="self-end rounded-xl bg-[#172033] px-5 py-3 text-sm font-semibold text-white hover:bg-[#24314a]"
+        className={buttonStyles({
+          className: "self-end rounded-xl",
+          size: "lg",
+        })}
         type="submit"
       >
         Check availability

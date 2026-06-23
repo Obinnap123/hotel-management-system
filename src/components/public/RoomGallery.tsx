@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -40,11 +41,18 @@ export function RoomGallery({
   return (
     <div className="space-y-3">
       <div className="group relative overflow-hidden rounded-2xl bg-[#ebe3d7] shadow-[0_18px_45px_rgba(23,32,51,0.08)]">
-        <img
-          alt={`${roomName} room view ${activeIndex + 1}`}
-          className="aspect-[4/3] w-full object-cover sm:aspect-[16/11] lg:aspect-[4/3]"
-          src={activeImage}
-        />
+        <AnimatePresence mode="wait">
+          <motion.img
+            alt={`${roomName} room view ${activeIndex + 1}`}
+            animate={{ opacity: 1, scale: 1 }}
+            className="aspect-[4/3] w-full object-cover sm:aspect-[16/11] lg:aspect-[4/3]"
+            exit={{ opacity: 0, scale: 1.01 }}
+            initial={{ opacity: 0, scale: 1.01 }}
+            key={activeImage}
+            src={activeImage}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+          />
+        </AnimatePresence>
 
         {hasMultipleImages ? (
           <>

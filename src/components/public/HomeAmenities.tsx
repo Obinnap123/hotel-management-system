@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { Car, Coffee, Dumbbell, ShieldCheck, Sparkles, Wifi } from "lucide-react";
 
 const amenities = [
@@ -51,13 +54,21 @@ export function HomeAmenities() {
         </div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {amenities.map((amenity) => {
+          {amenities.map((amenity, index) => {
             const Icon = amenity.icon;
 
             return (
-              <article
+              <motion.article
                 className="rounded-2xl border border-black/10 bg-[#fbfaf7] p-5 shadow-[0_14px_35px_rgba(23,32,51,0.04)] transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_18px_40px_rgba(23,32,51,0.08)]"
+                initial={{ opacity: 0, y: 18 }}
                 key={amenity.title}
+                transition={{
+                  duration: 0.48,
+                  ease: [0.22, 1, 0.36, 1],
+                  delay: index * 0.04,
+                }}
+                viewport={{ once: true, amount: 0.2 }}
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#172033] text-white">
                   <Icon aria-hidden="true" size={19} />
@@ -68,7 +79,7 @@ export function HomeAmenities() {
                 <p className="mt-2 text-sm leading-6 text-[#5f6b7a]">
                   {amenity.description}
                 </p>
-              </article>
+              </motion.article>
             );
           })}
         </div>

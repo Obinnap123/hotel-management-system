@@ -6,6 +6,7 @@ import {
   type PublicReservationActionState,
 } from "@/features/public-reservations/actions";
 import type { PublicRoomTypeSummary } from "@/features/public-room-types/queries";
+import { buttonStyles } from "@/components/ui/button-styles";
 
 type BookingFormProps = {
   roomTypes: PublicRoomTypeSummary[];
@@ -135,7 +136,7 @@ export function BookingForm({
       </PublicField>
 
       <button
-        className="inline-flex h-12 items-center justify-center rounded-full bg-[#172033] px-6 text-sm font-semibold text-white hover:bg-[#24314a] disabled:cursor-not-allowed disabled:bg-[#8b93a1]"
+        className={buttonStyles({ shape: "pill", size: "lg" })}
         disabled={pending}
         type="submit"
       >

@@ -4,6 +4,7 @@ import { AmenitiesSection } from "@/components/public/AmenitiesSection";
 import { RoomGallery } from "@/components/public/RoomGallery";
 import { getPublicRoomTypeBySlug } from "@/features/public-room-types/queries";
 import { formatPublicCurrency } from "@/lib/public/format";
+import { buttonStyles } from "@/components/ui/button-styles";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,11 @@ export default async function PublicRoomDetailsPage({
           </div>
           <AmenitiesSection amenities={roomType.amenities} />
           <Link
-            className="mt-8 inline-flex w-full justify-center rounded-full bg-[#172033] px-5 py-3 text-sm font-semibold text-white hover:bg-[#24314a]"
+            className={buttonStyles({
+              className: "mt-8 w-full",
+              shape: "pill",
+              size: "lg",
+            })}
             href={`/book?roomType=${roomType.slug}`}
           >
             Reserve this room type

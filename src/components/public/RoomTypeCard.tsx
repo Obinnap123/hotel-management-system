@@ -1,6 +1,10 @@
+"use client";
+
+import { motion } from "framer-motion";
 import Link from "next/link";
 import type { PublicRoomTypeSummary } from "@/features/public-room-types/queries";
 import { formatPublicCurrency } from "@/lib/public/format";
+import { buttonStyles } from "@/components/ui/button-styles";
 
 type RoomTypeCardProps = {
   roomType: PublicRoomTypeSummary;
@@ -9,7 +13,14 @@ type RoomTypeCardProps = {
 
 export function RoomTypeCard({ compact = false, roomType }: RoomTypeCardProps) {
   return (
-    <article className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <motion.article
+      className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm transition hover:shadow-md"
+      initial={{ opacity: 0, y: 18 }}
+      transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, amount: 0.18 }}
+      whileHover={{ y: -3 }}
+      whileInView={{ opacity: 1, y: 0 }}
+    >
       <Link href={`/rooms/${roomType.slug}`}>
         <img
           alt={`${roomType.name} room`}
@@ -52,13 +63,17 @@ export function RoomTypeCard({ compact = false, roomType }: RoomTypeCardProps) {
           </p>
           <div className="flex gap-2">
             <Link
-              className="rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#172033] hover:bg-black/5"
+              className={buttonStyles({
+                shape: "pill",
+                size: "sm",
+                variant: "secondary",
+              })}
               href={`/rooms/${roomType.slug}`}
             >
               Details
             </Link>
             <Link
-              className="rounded-full bg-[#172033] px-4 py-2 text-sm font-semibold text-white hover:bg-[#24314a]"
+              className={buttonStyles({ shape: "pill", size: "sm" })}
               href={`/book?roomType=${roomType.slug}`}
             >
               Reserve
@@ -66,7 +81,7 @@ export function RoomTypeCard({ compact = false, roomType }: RoomTypeCardProps) {
           </div>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
