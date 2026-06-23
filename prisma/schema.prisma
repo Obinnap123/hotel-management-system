@@ -54,11 +54,17 @@ model User {
 }
 
 model RoomType {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  name                  String   @unique
+  slug                  String   @unique
+  description           String?
+  coverImage            String?
+  coverImagePublicId    String?
+  galleryImages         String[] @default([])
+  galleryImagePublicIds String[] @default([])
+  amenities             String[] @default([])
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   rooms Room[]
 }
@@ -99,6 +105,8 @@ model Booking {
   checkInDate  DateTime
   checkOutDate DateTime
   totalAmount  Decimal       @db.Decimal(12, 2)
+  guestCount   Int           @default(1)
+  specialRequests String?
   checkedInAt  DateTime?
   checkedOutAt DateTime?
   status       BookingStatus @default(PENDING)

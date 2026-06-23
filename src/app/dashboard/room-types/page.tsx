@@ -37,7 +37,13 @@ export default async function RoomTypesPage({
       roomTypes={roomTypes.map((roomType) => ({
         id: roomType.id,
         name: roomType.name,
+        slug: roomType.slug,
         description: roomType.description,
+        coverImage: roomType.coverImage,
+        coverImagePublicId: roomType.coverImagePublicId,
+        galleryImages: roomType.galleryImages,
+        galleryImagePublicIds: roomType.galleryImagePublicIds,
+        amenities: roomType.amenities,
         roomCount: roomType._count.rooms,
       }))}
     />

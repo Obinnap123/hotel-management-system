@@ -25,7 +25,17 @@ export const roomStatusFormSchema = z.object({
 
 export const roomTypeFormSchema = z.object({
   name: z.string().trim().min(1, "Room type name is required."),
+  slug: z
+    .string()
+    .trim()
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Slug must use lowercase letters, numbers, and hyphens only.",
+    )
+    .optional()
+    .or(z.literal("")),
   description: z.string().trim().optional(),
+  amenities: z.string().trim().optional(),
 });
 
 export type RoomFormInput = z.infer<typeof roomFormSchema>;

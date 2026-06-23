@@ -10,6 +10,10 @@ import {
   roomStatusFormSchema,
   roomTypeFormSchema,
 } from "./validation";
+import {
+  deleteRoomTypeImage,
+  uploadRoomTypeImage,
+} from "@/lib/cloudinary/upload";
 import { prisma } from "@/server/db/prisma";
 
 const roomsPath = "/dashboard/rooms";
@@ -110,7 +114,10 @@ export async function updateRoomStatusAction(formData: FormData) {
   }
 
   try {
-    await manuallyUpdateRoomStatusForMvp(parsed.data.roomId, parsed.data.status);
+    await manuallyUpdateRoomStatusForMvp(
+      parsed.data.roomId,
+      parsed.data.status,
+    );
   } catch {
     redirect(`${roomsPath}?error=status-update`);
   }
@@ -135,7 +142,7 @@ export async function createRoomTypeAction(
 
   try {
     await prisma.roomType.create({
-      data: normalizeRoomTypeData(parsed.data),
+      data: await normalizeRoomTypeData(parsed.data, formData),
     });
   } catch (error) {
     return handlePrismaError(error, "Unable to create room type.");
@@ -162,10 +169,26 @@ export async function updateRoomTypeAction(
   }
 
   try {
+    const currentRoomType = await prisma.roomType.findUnique({
+      where: { id: roomTypeId },
+      select: {
+        coverImagePublicId: true,
+        galleryImagePublicIds: true,
+      },
+    });
+
+    if (!currentRoomType) {
+      return failure("Room type was not found.");
+    }
+
+    const data = await normalizeRoomTypeData(parsed.data, formData);
+
     await prisma.roomType.update({
       where: { id: roomTypeId },
-      data: normalizeRoomTypeData(parsed.data),
+      data,
     });
+
+    await cleanupRemovedRoomTypeImages(currentRoomType, data);
   } catch (error) {
     return handlePrismaError(error, "Unable to update room type.");
   }
@@ -193,9 +216,24 @@ export async function deleteRoomTypeAction(formData: FormData) {
   }
 
   try {
+    const currentRoomType = await prisma.roomType.findUnique({
+      where: { id: roomTypeId },
+      select: {
+        coverImagePublicId: true,
+        galleryImagePublicIds: true,
+      },
+    });
+
     await prisma.roomType.delete({
       where: { id: roomTypeId },
     });
+
+    if (currentRoomType) {
+      await cleanupRemovedRoomTypeImages(currentRoomType, {
+        coverImagePublicId: null,
+        galleryImagePublicIds: [],
+      });
+    }
   } catch {
     redirect(`${roomTypesPath}?error=delete-room-type`);
   }
@@ -205,11 +243,135 @@ export async function deleteRoomTypeAction(formData: FormData) {
   redirect(`${roomTypesPath}?success=room-type-deleted`);
 }
 
-function normalizeRoomTypeData(data: { name: string; description?: string }) {
+async function normalizeRoomTypeData(
+  data: {
+    name: string;
+    slug?: string;
+    description?: string;
+    amenities?: string;
+  },
+  formData: FormData,
+) {
+  const coverImage = await resolveCoverImage(formData);
+  const gallery = await resolveGalleryImages(formData);
+
   return {
     name: data.name,
+    slug: data.slug ? slugify(data.slug) : slugify(data.name),
     description: data.description || null,
+    coverImage: coverImage.secureUrl,
+    coverImagePublicId: coverImage.publicId,
+    galleryImages: gallery.secureUrls,
+    galleryImagePublicIds: gallery.publicIds,
+    amenities: parseAmenities(data.amenities),
   };
+}
+
+async function resolveCoverImage(formData: FormData) {
+  const existingCoverImage = String(formData.get("existingCoverImage") ?? "");
+  const existingCoverImagePublicId = String(
+    formData.get("existingCoverImagePublicId") ?? "",
+  );
+  const coverImage = formData.get("coverImage");
+
+  if (coverImage instanceof File && coverImage.size > 0) {
+    const uploaded = await uploadRoomTypeImage(coverImage);
+    return {
+      secureUrl: uploaded.secureUrl,
+      publicId: uploaded.publicId,
+    };
+  }
+
+  return {
+    secureUrl: existingCoverImage || null,
+    publicId: existingCoverImage ? existingCoverImagePublicId || null : null,
+  };
+}
+
+async function resolveGalleryImages(formData: FormData) {
+  const existingGalleryImages = formData
+    .getAll("existingGalleryImages")
+    .map((value) => String(value))
+    .filter(Boolean);
+  const existingGalleryImagePublicIds = formData
+    .getAll("existingGalleryImagePublicIds")
+    .map((value) => String(value));
+  const galleryFiles = formData
+    .getAll("galleryImages")
+    .filter((value): value is File => value instanceof File && value.size > 0);
+
+  const uploadedImages = await Promise.all(
+    galleryFiles.map(async (file) => {
+      const uploaded = await uploadRoomTypeImage(file);
+      return {
+        secureUrl: uploaded.secureUrl,
+        publicId: uploaded.publicId,
+      };
+    }),
+  );
+
+  return {
+    secureUrls: [
+      ...existingGalleryImages,
+      ...uploadedImages.map((image) => image.secureUrl),
+    ],
+    publicIds: [
+      ...existingGalleryImages.map(
+        (_, index) => existingGalleryImagePublicIds[index] ?? "",
+      ),
+      ...uploadedImages.map((image) => image.publicId),
+    ],
+  };
+}
+
+async function cleanupRemovedRoomTypeImages(
+  previous: {
+    coverImagePublicId: string | null;
+    galleryImagePublicIds: string[];
+  },
+  next: {
+    coverImagePublicId: string | null;
+    galleryImagePublicIds: string[];
+  },
+) {
+  const nextPublicIds = new Set([
+    next.coverImagePublicId,
+    ...next.galleryImagePublicIds,
+  ]);
+  const previousPublicIds = [
+    previous.coverImagePublicId,
+    ...previous.galleryImagePublicIds,
+  ].filter((publicId): publicId is string => Boolean(publicId));
+
+  const removedPublicIds = previousPublicIds.filter(
+    (publicId) => !nextPublicIds.has(publicId),
+  );
+
+  await Promise.allSettled(
+    removedPublicIds.map((publicId) => deleteRoomTypeImage(publicId)),
+  );
+}
+
+function parseAmenities(value?: string) {
+  if (!value) {
+    return [];
+  }
+
+  // Split by newlines first, then by commas if needed
+  return value
+    .split(/\r?\n|,/)
+    .map((amenity) => amenity.trim())
+    .filter((amenity) => amenity.length > 0);
+}
+
+function slugify(value: string) {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug || crypto.randomUUID();
 }
 
 function success(message: string): ActionState {
@@ -226,6 +388,10 @@ function handlePrismaError(error: unknown, fallbackMessage: string) {
     error.code === "P2002"
   ) {
     return failure("A record with this value already exists.");
+  }
+
+  if (error instanceof Error) {
+    return failure(error.message || fallbackMessage);
   }
 
   return failure(fallbackMessage);
