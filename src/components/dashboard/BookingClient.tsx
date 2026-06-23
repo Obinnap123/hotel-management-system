@@ -39,6 +39,7 @@ export type BookingTableItem = {
   checkInDate: string;
   checkOutDate: string;
   totalAmount: string;
+  specialRequests: string | null;
   checkInInput: string;
   checkOutInput: string;
   status: BookingStatusValue;

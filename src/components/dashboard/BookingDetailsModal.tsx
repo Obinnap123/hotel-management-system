@@ -46,6 +46,14 @@ export function BookingDetailsModal({
           />
         </DetailSection>
 
+        <DetailSection title="Special Requests">
+          <div className="sm:col-span-2">
+            <p className="whitespace-pre-wrap break-words text-sm font-medium leading-6 text-zinc-900">
+              {booking.specialRequests?.trim() || "No special requests."}
+            </p>
+          </div>
+        </DetailSection>
+
         <DetailSection title="Room Details">
           <DetailItem label="Room Number" value={booking.roomNumber} />
           <DetailItem label="Room Type" value={booking.roomTypeName} />

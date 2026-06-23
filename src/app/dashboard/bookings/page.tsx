@@ -57,6 +57,7 @@ export default async function BookingsPage({
         checkInDate: dateFormatter.format(booking.checkInDate),
         checkOutDate: dateFormatter.format(booking.checkOutDate),
         totalAmount: booking.totalAmount.toString(),
+        specialRequests: booking.specialRequests,
         checkInInput: toDateInputValue(booking.checkInDate),
         checkOutInput: toDateInputValue(booking.checkOutDate),
         status: booking.status,

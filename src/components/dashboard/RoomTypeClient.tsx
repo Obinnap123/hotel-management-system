@@ -21,6 +21,12 @@ import {
 import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 
+type SelectedGalleryImage = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
+
 export type RoomTypeTableItem = {
   id: string;
   name: string;
@@ -237,7 +243,6 @@ function EditRoomTypeDialog({ roomType }: { roomType: RoomTypeTableItem }) {
 
 function RoomTypeForm({
   action,
-  pending: initialPending,
   roomType,
   state,
   submitLabel,
@@ -261,21 +266,34 @@ function RoomTypeForm({
       (_, index) => roomType.galleryImagePublicIds[index] ?? "",
     ) ?? [],
   );
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  const [selectedGalleryImages, setSelectedGalleryImages] = useState<
+    SelectedGalleryImage[]
+  >([]);
   const [validationError, setValidationError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const selectedGalleryImagesRef = useRef<SelectedGalleryImage[]>([]);
+
+  useEffect(() => {
+    selectedGalleryImagesRef.current = selectedGalleryImages;
+  }, [selectedGalleryImages]);
 
   useEffect(() => {
     return () => {
       if (coverPreview) {
         URL.revokeObjectURL(coverPreview);
       }
-
-      galleryPreviews.forEach((preview) => URL.revokeObjectURL(preview));
     };
-  }, [coverPreview, galleryPreviews]);
+  }, [coverPreview]);
+
+  useEffect(() => {
+    return () => {
+      selectedGalleryImagesRef.current.forEach((image) =>
+        URL.revokeObjectURL(image.previewUrl),
+      );
+    };
+  }, []);
 
   function handleKeyDown(event: KeyboardEvent<HTMLFormElement>) {
     submitOnEnter(event);
@@ -296,10 +314,19 @@ function RoomTypeForm({
   function handleGalleryChange(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
 
-    setGalleryPreviews((current) => {
-      current.forEach((preview) => URL.revokeObjectURL(preview));
-      return files.map((file) => URL.createObjectURL(file));
-    });
+    if (files.length === 0) {
+      return;
+    }
+
+    setSelectedGalleryImages((current) => [
+      ...current,
+      ...files.map((file, index) => ({
+        id: `${file.name}-${file.lastModified}-${Date.now()}-${index}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      })),
+    ]);
+    event.target.value = "";
     setValidationError(null);
   }
 
@@ -326,9 +353,21 @@ function RoomTypeForm({
       galleryInputRef.current.value = "";
     }
 
-    setGalleryPreviews((current) => {
-      current.forEach((preview) => URL.revokeObjectURL(preview));
+    setSelectedGalleryImages((current) => {
+      current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
       return [];
+    });
+  }
+
+  function removeSelectedGalleryImage(id: string) {
+    setSelectedGalleryImages((current) => {
+      const imageToRemove = current.find((image) => image.id === id);
+
+      if (imageToRemove) {
+        URL.revokeObjectURL(imageToRemove.previewUrl);
+      }
+
+      return current.filter((image) => image.id !== id);
     });
   }
 
@@ -397,14 +436,9 @@ function RoomTypeForm({
     });
 
     // New gallery image files
-    const galleryFileInput = formRef.current?.querySelector(
-      'input[name="galleryImages"]',
-    ) as HTMLInputElement;
-    if (galleryFileInput?.files) {
-      Array.from(galleryFileInput.files).forEach((file) => {
-        formData.append("galleryImages", file);
-      });
-    }
+    selectedGalleryImages.forEach((image) => {
+      formData.append("galleryImages", image.file);
+    });
 
     // Submit the form inside a transition
     startTransition(() => {
@@ -549,7 +583,7 @@ function RoomTypeForm({
           </div>
         ))}
 
-        {galleryImages.length > 0 || galleryPreviews.length > 0 ? (
+        {galleryImages.length > 0 || selectedGalleryImages.length > 0 ? (
           <div className="grid gap-2 sm:grid-cols-3">
             {galleryImages.map((image, index) => (
               <GalleryPreview
@@ -558,8 +592,12 @@ function RoomTypeForm({
                 onRemove={() => removeExistingGalleryImage(index)}
               />
             ))}
-            {galleryPreviews.map((image) => (
-              <GalleryPreview image={image} key={image} />
+            {selectedGalleryImages.map((image) => (
+              <GalleryPreview
+                image={image.previewUrl}
+                key={image.id}
+                onRemove={() => removeSelectedGalleryImage(image.id)}
+              />
             ))}
           </div>
         ) : (
@@ -582,7 +620,7 @@ function RoomTypeForm({
               type="file"
             />
           </label>
-          {galleryPreviews.length > 0 ? (
+          {selectedGalleryImages.length > 0 ? (
             <button
               className="inline-flex h-10 items-center rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
               onClick={clearSelectedGalleryImages}

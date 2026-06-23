@@ -1,23 +1,89 @@
+import Link from "next/link";
+import { Mail, MapPin, Phone } from "lucide-react";
+
 export function PublicFooter() {
   return (
-    <footer className="border-t border-black/10 bg-[#172033] text-white">
-      <div className="mx-auto grid max-w-7xl gap-6 px-5 py-10 text-sm sm:grid-cols-3 lg:px-8">
-        <div>
-          <p className="text-base font-semibold">Obinna&apos;s Hotel</p>
-          <p className="mt-2 max-w-sm text-white/70">
-            Elegant stays, thoughtful service, and seamless reservations.
-          </p>
+    <footer className="border-t border-white/10 bg-[#101725] text-white">
+      <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.7fr_0.9fr_0.9fr]">
+          <div>
+            <p className="text-xl font-semibold tracking-tight">
+              Obinna&apos;s Hotel
+            </p>
+            <p className="mt-4 max-w-sm text-sm leading-7 text-white/66">
+              Elegant stays, thoughtful service, and reservations that flow
+              directly into hotel operations.
+            </p>
+            <Link
+              className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#172033] transition hover:bg-white/90"
+              href="/book"
+            >
+              Reserve your stay
+            </Link>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#d6bd8d]">
+              Explore
+            </p>
+            <nav className="mt-4 grid gap-3 text-sm text-white/68">
+              <Link className="transition hover:text-white" href="/">
+                Home
+              </Link>
+              <Link className="transition hover:text-white" href="/rooms">
+                Rooms
+              </Link>
+              <Link className="transition hover:text-white" href="/book">
+                Reserve
+              </Link>
+              <Link className="transition hover:text-white" href="/login">
+                Staff Login
+              </Link>
+            </nav>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#d6bd8d]">
+              Reservations
+            </p>
+            <p className="mt-4 text-sm leading-7 text-white/68">
+              Book online and present your booking number at reception when you
+              arrive.
+            </p>
+            <p className="mt-3 text-sm leading-7 text-white/68">
+              Payments, check-in, and check-out are completed by hotel staff.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#d6bd8d]">
+              Contact
+            </p>
+            <div className="mt-4 grid gap-3 text-sm text-white/68">
+              <p className="flex gap-3">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
+                <span>Lagos, Nigeria</span>
+              </p>
+              <p className="flex gap-3">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
+                <span>Reception available on request</span>
+              </p>
+              <p className="flex gap-3">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
+                <span>reservations@obinnashotel.com</span>
+              </p>
+            </div>
+          </div>
         </div>
-        <div>
-          <p className="font-semibold">Reservations</p>
-          <p className="mt-2 text-white/70">
-            Book online and present your booking number at reception.
+
+        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/48 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            &copy; {new Date().getFullYear()} Obinna&apos;s Hotel. All rights
+            reserved.
           </p>
-        </div>
-        <div>
-          <p className="font-semibold">Hotel Operations</p>
-          <p className="mt-2 text-white/70">
-            Public reservations flow directly into the internal HMS.
+          <p>
+            Public reservations connected to the internal Hotel Management
+            System.
           </p>
         </div>
       </div>
