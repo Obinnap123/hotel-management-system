@@ -14,10 +14,10 @@ const baseStyles =
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--primary)] text-white shadow-sm hover:bg-[var(--primary-hover)]",
+    "bg-[var(--button-primary-bg)] text-[var(--button-primary-text)] shadow-sm hover:bg-[var(--button-primary-hover)]",
   secondary:
-    "border border-black/10 bg-white text-[var(--primary)] shadow-sm hover:bg-black/5",
-  ghost: "text-[var(--primary)] hover:bg-black/5",
+    "border border-[var(--button-secondary-border)] bg-[var(--button-secondary-bg)] text-[var(--button-secondary-text)] shadow-sm hover:bg-[var(--button-secondary-hover)]",
+  ghost: "text-[var(--primary)] hover:bg-[var(--button-ghost-hover)]",
   danger:
     "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800",
 };

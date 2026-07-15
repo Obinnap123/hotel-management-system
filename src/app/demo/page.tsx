@@ -7,6 +7,7 @@ import { RoomTypeCard } from "@/components/public/RoomTypeCard";
 import { Testimonials } from "@/components/public/Testimonials";
 import { getFeaturedPublicRoomTypes } from "@/features/public-room-types/queries";
 import { getHotelSettings } from "@/features/settings/queries";
+import { publicReservationPath } from "@/lib/public/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,10 @@ export default async function PublicHomePage() {
                 availability updates as reservations are made.
               </p>
             </div>
-            <Link className="text-sm font-semibold text-[#172033]" href="/rooms">
+            <Link
+              className="text-sm font-semibold text-[#172033]"
+              href={publicReservationPath("/rooms")}
+            >
               See all rooms
             </Link>
           </div>

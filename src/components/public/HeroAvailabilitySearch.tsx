@@ -1,9 +1,10 @@
 import { buttonStyles } from "@/components/ui/button-styles";
+import { publicReservationPath } from "@/lib/public/routes";
 
 export function HeroAvailabilitySearch() {
   return (
     <form
-      action="/book"
+      action={publicReservationPath("/book")}
       className="mt-10 grid gap-3 rounded-2xl border border-white/20 bg-white/95 p-3 text-[#172033] shadow-lg sm:grid-cols-[1fr_1fr_0.8fr_auto]"
     >
       <label className="block">

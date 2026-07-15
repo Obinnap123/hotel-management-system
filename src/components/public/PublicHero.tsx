@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HeroAvailabilitySearch } from "@/components/public/HeroAvailabilitySearch";
+import { publicReservationPath } from "@/lib/public/routes";
 
 const heroImages = [
   {
@@ -81,13 +82,13 @@ export function PublicHero({ hotelName }: { hotelName: string }) {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               className="inline-flex h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#172033] shadow-sm transition hover:bg-white/90"
-              href="/book"
+              href={publicReservationPath("/book")}
             >
               Reserve now
             </Link>
             <Link
               className="inline-flex h-12 items-center justify-center rounded-full border border-white/35 bg-transparent px-6 text-sm font-semibold text-white transition hover:bg-white/10"
-              href="/rooms"
+              href={publicReservationPath("/rooms")}
             >
               View rooms
             </Link>

@@ -13,8 +13,12 @@
   --text-muted: #667085;
   --primary: #172033;
   --primary-hover: #24314a;
+  --text-strong: #172033;
   --brand-navy: #172033;
   --brand-navy-hover: #24314a;
+  --brand-solid: #172033;
+  --brand-solid-hover: #24314a;
+  --brand-solid-text: #ffffff;
   --brand-cream: #f7f3ed;
   --brand-cream-soft: #fbfaf7;
   --brand-gold: #8a6f46;
@@ -22,9 +26,18 @@
   --brand-footer: #101725;
   --accent: #0f766e;
   --accent-soft: #ecfdf5;
+  --button-primary-bg: #172033;
+  --button-primary-hover: #24314a;
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #ffffff;
+  --button-secondary-border: rgba(0, 0, 0, 0.1);
+  --button-secondary-hover: rgba(0, 0, 0, 0.05);
+  --button-secondary-text: #172033;
+  --button-ghost-hover: rgba(0, 0, 0, 0.05);
   --ring: rgba(15, 118, 110, 0.22);
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
   --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08);
+  --hero-glow: rgba(23, 32, 51, 0.09);
 }
 
 @theme inline {
@@ -36,6 +49,257 @@
   :root {
     --background: #f6f7f9;
     --foreground: #111827;
+  }
+}
+
+.marketing-theme {
+  --background: #ffffff;
+  --foreground: #111827;
+  --app-bg: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --surface-soft: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #111827;
+  --text-muted: #667085;
+  --text-strong: #172033;
+  --primary: #172033;
+  --primary-hover: #24314a;
+  --brand-navy: #172033;
+  --brand-navy-hover: #24314a;
+  --brand-solid: #172033;
+  --brand-solid-hover: #24314a;
+  --brand-solid-text: #ffffff;
+  --brand-gold: #8a6f46;
+  --brand-gold-soft: #f1ebe1;
+  --brand-footer: #101725;
+  --accent: #0f766e;
+  --accent-soft: #ecfdf5;
+  --button-primary-bg: #172033;
+  --button-primary-hover: #24314a;
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #ffffff;
+  --button-secondary-border: rgba(15, 23, 42, 0.12);
+  --button-secondary-hover: #f8fafc;
+  --button-secondary-text: #172033;
+  --button-ghost-hover: #f1f5f9;
+  --ring: rgba(15, 118, 110, 0.22);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 14px 36px rgba(15, 23, 42, 0.09);
+  --hero-glow: rgba(23, 32, 51, 0.09);
+  --marketing-max-width: 80rem;
+  --marketing-reading-width: 44rem;
+  --marketing-section-space: clamp(4.5rem, 8vw, 7.5rem);
+  --marketing-radius: 1.25rem;
+  --marketing-radius-sm: 0.75rem;
+  background: var(--background);
+  color: var(--text);
+  color-scheme: light;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+@media (prefers-color-scheme: dark) {
+  .marketing-theme {
+    --background: #080d18;
+    --foreground: #f8fafc;
+    --app-bg: #080d18;
+    --surface: #101827;
+    --surface-muted: #0c1322;
+    --surface-soft: #162235;
+    --border: rgba(148, 163, 184, 0.18);
+    --border-strong: rgba(203, 213, 225, 0.3);
+    --text: #f8fafc;
+    --text-muted: #a7b4c7;
+    --text-strong: #f8fafc;
+    --primary: #f8fafc;
+    --primary-hover: #e2e8f0;
+    --brand-navy: #f8fafc;
+    --brand-navy-hover: #e2e8f0;
+    --brand-solid: #d6bd7b;
+    --brand-solid-hover: #e4cf93;
+    --brand-solid-text: #101725;
+    --brand-gold: #d6bd7b;
+    --brand-gold-soft: rgba(214, 189, 123, 0.16);
+    --brand-footer: #070b14;
+    --accent: #5eead4;
+    --accent-soft: rgba(20, 184, 166, 0.14);
+    --button-primary-bg: #f8fafc;
+    --button-primary-hover: #e2e8f0;
+    --button-primary-text: #101725;
+    --button-secondary-bg: rgba(255, 255, 255, 0.06);
+    --button-secondary-border: rgba(255, 255, 255, 0.14);
+    --button-secondary-hover: rgba(255, 255, 255, 0.1);
+    --button-secondary-text: #f8fafc;
+    --button-ghost-hover: rgba(255, 255, 255, 0.08);
+    --ring: rgba(94, 234, 212, 0.22);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.18);
+    --shadow-md: 0 18px 44px rgba(0, 0, 0, 0.24);
+    --hero-glow: rgba(214, 189, 123, 0.14);
+    color-scheme: dark;
+  }
+}
+
+.marketing-theme ::selection {
+  background: var(--brand-gold-soft);
+  color: var(--text-strong);
+}
+
+.marketing-theme input,
+.marketing-theme select,
+.marketing-theme textarea {
+  background: var(--surface);
+  color: var(--text) !important;
+}
+
+.marketing-theme input::placeholder,
+.marketing-theme textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.78;
+}
+
+.marketing-container {
+  width: min(100% - 2.5rem, var(--marketing-max-width));
+  margin-inline: auto;
+}
+
+.marketing-section {
+  padding-block: var(--marketing-section-space);
+}
+
+.marketing-page-hero {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px),
+    var(--background);
+  background-size: 72px 72px;
+  background-position: center top;
+}
+
+.marketing-page-hero::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    var(--background) 0%,
+    color-mix(in srgb, var(--background) 86%, transparent) 48%,
+    color-mix(in srgb, var(--background) 72%, transparent) 100%
+  );
+}
+
+.marketing-page-hero > * {
+  position: relative;
+}
+
+.marketing-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--brand-gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+}
+
+.marketing-eyebrow-line {
+  display: inline-block;
+  width: 1.75rem;
+  height: 1px;
+  background: currentColor;
+}
+
+.marketing-display {
+  color: var(--text-strong);
+  font-size: 2.75rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.marketing-heading {
+  color: var(--text-strong);
+  font-size: 2rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.06;
+  text-wrap: balance;
+}
+
+.marketing-lead {
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.marketing-final-band {
+  position: relative;
+  overflow: hidden;
+  background: var(--brand-footer);
+  color: white;
+}
+
+.marketing-final-band::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(90deg, transparent 30%, black 100%);
+}
+
+.marketing-final-band > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 640px) {
+  .marketing-container {
+    width: min(100% - 4rem, var(--marketing-max-width));
+  }
+
+  .marketing-display {
+    font-size: 3.5rem;
+  }
+
+  .marketing-heading {
+    font-size: 2.75rem;
+  }
+
+  .marketing-lead {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketing-display {
+    font-size: 4.75rem;
+  }
+
+  .marketing-heading {
+    font-size: 3.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-theme *,
+  .marketing-theme *::before,
+  .marketing-theme *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

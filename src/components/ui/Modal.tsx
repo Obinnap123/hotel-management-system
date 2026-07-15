@@ -32,11 +32,15 @@ export function Modal({
               <Dialog.Title className="text-lg font-semibold tracking-tight text-slate-950">
                 {title}
               </Dialog.Title>
-              {description ? (
-                <Dialog.Description className="mt-1 break-words text-sm leading-6 text-slate-600">
-                  {description}
-                </Dialog.Description>
-              ) : null}
+              <Dialog.Description
+                className={
+                  description
+                    ? "mt-1 break-words text-sm leading-6 text-slate-600"
+                    : "sr-only"
+                }
+              >
+                {description ?? `${title} dialog.`}
+              </Dialog.Description>
             </div>
             <Dialog.Close className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--border)] text-slate-500 transition hover:bg-slate-50 hover:text-slate-900">
               <X className="h-4 w-4" />

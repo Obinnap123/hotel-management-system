@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookingForm } from "@/components/public/BookingForm";
 import { getAllPublicRoomTypes } from "@/features/public-room-types/queries";
+import { publicReservationPath } from "@/lib/public/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ export default async function PublicBookPage({
 
         <Link
           className="mt-6 inline-flex rounded-full bg-[#172033] px-5 py-3 text-sm font-semibold text-white"
-          href="/rooms"
+          href={publicReservationPath("/rooms")}
         >
           Back to rooms
         </Link>

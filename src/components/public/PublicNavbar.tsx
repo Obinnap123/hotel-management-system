@@ -5,11 +5,12 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { buttonStyles } from "@/components/ui/button-styles";
+import { publicReservationPath } from "@/lib/public/routes";
 
 const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/rooms", label: "Rooms" },
-  { href: "/book", label: "Reserve" },
+  { href: publicReservationPath("/"), label: "Home" },
+  { href: publicReservationPath("/rooms"), label: "Rooms" },
+  { href: publicReservationPath("/book"), label: "Reserve" },
   { href: "/login", label: "Staff Login" },
 ];
 
@@ -22,7 +23,7 @@ export function PublicNavbar({ hotelName }: { hotelName: string }) {
         <div className="flex items-center justify-between gap-4">
           <Link
             className="text-lg font-semibold tracking-tight text-[#172033]"
-            href="/"
+            href={publicReservationPath("/")}
             onClick={() => setMenuOpen(false)}
           >
             {hotelName}
@@ -32,7 +33,7 @@ export function PublicNavbar({ hotelName }: { hotelName: string }) {
             {navLinks.map((link) => (
               <Link
                 className={
-                  link.href === "/book"
+                  link.href === publicReservationPath("/book")
                     ? buttonStyles({ shape: "pill", size: "sm" })
                     : "rounded-full px-3 py-2 transition hover:bg-black/5 hover:text-[#172033]"
                 }
@@ -71,7 +72,7 @@ export function PublicNavbar({ hotelName }: { hotelName: string }) {
               {navLinks.map((link) => (
                 <Link
                   className={
-                    link.href === "/book"
+                    link.href === publicReservationPath("/book")
                       ? "rounded-xl bg-[#172033] px-4 py-3 text-white"
                       : "rounded-xl px-4 py-3 transition hover:bg-[#f7f3ed] hover:text-[#172033]"
                   }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
+import { publicReservationPath } from "@/lib/public/routes";
 
 type PublicFooterProps = {
   hotelName: string;
@@ -30,7 +31,7 @@ export function PublicFooter({
             </p>
             <Link
               className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#172033] transition hover:bg-white/90"
-              href="/book"
+              href={publicReservationPath("/book")}
             >
               Reserve your stay
             </Link>
@@ -41,13 +42,13 @@ export function PublicFooter({
               Explore
             </p>
             <nav className="mt-4 grid gap-3 text-sm text-white/68">
-              <Link className="transition hover:text-white" href="/">
+              <Link className="transition hover:text-white" href={publicReservationPath("/")}>
                 Home
               </Link>
-              <Link className="transition hover:text-white" href="/rooms">
+              <Link className="transition hover:text-white" href={publicReservationPath("/rooms")}>
                 Rooms
               </Link>
-              <Link className="transition hover:text-white" href="/book">
+              <Link className="transition hover:text-white" href={publicReservationPath("/book")}>
                 Reserve
               </Link>
               <Link className="transition hover:text-white" href="/login">

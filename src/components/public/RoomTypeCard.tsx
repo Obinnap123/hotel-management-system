@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import type { PublicRoomTypeSummary } from "@/features/public-room-types/queries";
 import { formatPublicCurrency } from "@/lib/public/format";
+import { publicReservationPath } from "@/lib/public/routes";
 import { buttonStyles } from "@/components/ui/button-styles";
 
 type RoomTypeCardProps = {
@@ -21,7 +22,7 @@ export function RoomTypeCard({ compact = false, roomType }: RoomTypeCardProps) {
       whileHover={{ y: -3 }}
       whileInView={{ opacity: 1, y: 0 }}
     >
-      <Link href={`/rooms/${roomType.slug}`}>
+      <Link href={publicReservationPath(`/rooms/${roomType.slug}`)}>
         <img
           alt={`${roomType.name} room`}
           className="h-56 w-full object-cover"
@@ -68,13 +69,13 @@ export function RoomTypeCard({ compact = false, roomType }: RoomTypeCardProps) {
                 size: "sm",
                 variant: "secondary",
               })}
-              href={`/rooms/${roomType.slug}`}
+              href={publicReservationPath(`/rooms/${roomType.slug}`)}
             >
               Details
             </Link>
             <Link
               className={buttonStyles({ shape: "pill", size: "sm" })}
-              href={`/book?roomType=${roomType.slug}`}
+              href={publicReservationPath(`/book?roomType=${roomType.slug}`)}
             >
               Reserve
             </Link>

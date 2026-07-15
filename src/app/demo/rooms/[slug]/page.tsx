@@ -4,6 +4,7 @@ import { AmenitiesSection } from "@/components/public/AmenitiesSection";
 import { RoomGallery } from "@/components/public/RoomGallery";
 import { getPublicRoomTypeBySlug } from "@/features/public-room-types/queries";
 import { formatPublicCurrency } from "@/lib/public/format";
+import { publicReservationPath } from "@/lib/public/routes";
 import { buttonStyles } from "@/components/ui/button-styles";
 
 export const dynamic = "force-dynamic";
@@ -77,7 +78,7 @@ export default async function PublicRoomDetailsPage({
               shape: "pill",
               size: "lg",
             })}
-            href={`/book?roomType=${roomType.slug}`}
+            href={publicReservationPath(`/book?roomType=${roomType.slug}`)}
           >
             Reserve this room type
           </Link>

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button-styles";
+import { publicReservationPath } from "@/lib/public/routes";
 
 type BookingSuccessCardProps = {
   booking: string;
@@ -49,7 +50,7 @@ export function BookingSuccessCard({
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link
           className={buttonStyles({ shape: "pill", size: "lg" })}
-          href="/"
+          href={publicReservationPath("/")}
         >
           Back home
         </Link>
@@ -59,7 +60,7 @@ export function BookingSuccessCard({
             size: "lg",
             variant: "secondary",
           })}
-          href="/rooms"
+          href={publicReservationPath("/rooms")}
         >
           View rooms
         </Link>

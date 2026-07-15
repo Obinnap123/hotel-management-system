@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createPublicReservation, PublicReservationRuleError } from "./service";
 import { publicReservationSchema } from "./validation";
 import { Prisma } from "@prisma/client";
+import { publicReservationPath } from "@/lib/public/routes";
 
 export type PublicReservationActionState = {
   ok: boolean;
@@ -11,7 +12,7 @@ export type PublicReservationActionState = {
   fieldErrors?: Record<string, string[]>;
 };
 
-const bookingSuccessPath = "/booking-success";
+const bookingSuccessPath = publicReservationPath("/booking-success");
 
 export async function createPublicReservationAction(
   _state: PublicReservationActionState,
