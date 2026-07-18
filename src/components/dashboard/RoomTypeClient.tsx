@@ -1,6 +1,7 @@
 "use client";
 
 import { Edit, ImagePlus, Plus, Trash2, X } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
@@ -520,10 +521,13 @@ function RoomTypeForm({
 
         {coverImage || coverPreview ? (
           <div className="relative overflow-hidden rounded-md border border-zinc-200 bg-white">
-            <img
+            <Image
               alt="Room type cover preview"
               className="h-40 w-full object-cover"
+              height={320}
               src={coverPreview ?? coverImage ?? ""}
+              unoptimized={Boolean(coverPreview || coverImage?.includes("res.cloudinary.com"))}
+              width={640}
             />
             <button
               className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 bg-white/90 text-zinc-700 shadow-sm hover:bg-white"
@@ -674,10 +678,13 @@ function RoomTypeThumbnail({ roomType }: { roomType: RoomTypeTableItem }) {
   }
 
   return (
-    <img
+    <Image
       alt={`${roomType.name} cover`}
       className="h-14 w-20 shrink-0 rounded-md border border-zinc-200 object-cover"
+      height={56}
       src={roomType.coverImage}
+      unoptimized={roomType.coverImage.includes("res.cloudinary.com")}
+      width={80}
     />
   );
 }
@@ -719,10 +726,13 @@ function GalleryPreview({
 }) {
   return (
     <div className="relative overflow-hidden rounded-md border border-zinc-200 bg-white">
-      <img
+      <Image
         alt="Room type gallery preview"
         className="h-24 w-full object-cover"
+        height={192}
         src={image}
+        unoptimized={image.startsWith("blob:") || image.includes("res.cloudinary.com")}
+        width={320}
       />
       {onRemove ? (
         <button

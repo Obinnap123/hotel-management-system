@@ -1,53 +1,17 @@
-import { buttonStyles } from "@/components/ui/button-styles";
+import { ArrowRight } from "lucide-react";
 import { publicReservationPath } from "@/lib/public/routes";
 
 export function HeroAvailabilitySearch() {
   return (
-    <form
-      action={publicReservationPath("/book")}
-      className="mt-10 grid gap-3 rounded-2xl border border-white/20 bg-white/95 p-3 text-[#172033] shadow-lg sm:grid-cols-[1fr_1fr_0.8fr_auto]"
-    >
-      <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-wide text-[#5f6b7a]">
-          Check-in
-        </span>
-        <input
-          className="mt-1 h-11 w-full rounded-lg border border-black/10 px-3 text-sm"
-          name="checkInDate"
-          type="date"
-        />
-      </label>
-      <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-wide text-[#5f6b7a]">
-          Check-out
-        </span>
-        <input
-          className="mt-1 h-11 w-full rounded-lg border border-black/10 px-3 text-sm"
-          name="checkOutDate"
-          type="date"
-        />
-      </label>
-      <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-wide text-[#5f6b7a]">
-          Guests
-        </span>
-        <input
-          className="mt-1 h-11 w-full rounded-lg border border-black/10 px-3 text-sm"
-          defaultValue={1}
-          min={1}
-          name="guestCount"
-          type="number"
-        />
-      </label>
-      <button
-        className={buttonStyles({
-          className: "self-end rounded-xl",
-          size: "lg",
-        })}
-        type="submit"
-      >
-        Check availability
-      </button>
+    <form action={publicReservationPath("/book")} className="mx-auto grid max-w-[82rem] border border-[#d9d3c8] bg-[#fbfaf6] p-2 text-[#22312d] shadow-[0_22px_60px_rgba(10,34,28,.22)] sm:grid-cols-2 lg:grid-cols-[1fr_1fr_.7fr_auto] lg:p-0">
+      <SearchField label="Arrival"><input className="mt-1 h-8 w-full border-0 bg-transparent p-0 text-sm shadow-none! focus:shadow-none!" name="checkInDate" type="date" /></SearchField>
+      <SearchField label="Departure"><input className="mt-1 h-8 w-full border-0 bg-transparent p-0 text-sm shadow-none! focus:shadow-none!" name="checkOutDate" type="date" /></SearchField>
+      <SearchField label="Guests"><input className="mt-1 h-8 w-full border-0 bg-transparent p-0 text-sm shadow-none! focus:shadow-none!" defaultValue={1} min={1} name="guestCount" type="number" /></SearchField>
+      <button className="m-1 inline-flex min-h-14 items-center justify-center gap-3 bg-[#173b32] px-7 text-xs font-bold uppercase tracking-[0.13em] text-white transition hover:bg-[#225044] sm:col-span-2 lg:col-span-1 lg:m-0 lg:min-h-24" type="submit">Check availability <ArrowRight aria-hidden="true" className="h-4 w-4" /></button>
     </form>
   );
+}
+
+function SearchField({ children, label }: { children: React.ReactNode; label: string }) {
+  return <label className="border-b border-[#d9d3c8] px-5 py-3 sm:border-b-0 sm:border-r lg:px-7 lg:py-5"><span className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[#765d45]">{label}</span>{children}</label>;
 }

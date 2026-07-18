@@ -19,25 +19,18 @@ export default async function PublicHomePage() {
 
   return (
     <div>
-      <PublicHero hotelName={settings.hotelName} />
+      <PublicHero heroImages={settings.heroImages} hotelName={settings.hotelName} />
 
-      <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+      <section className="reservation-container reservation-section pt-[13rem]! sm:pt-40! lg:pt-28!" id="featured-stays">
         <MotionReveal>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="grid gap-7 border-b border-[#d9d3c8] pb-8 md:grid-cols-[1fr_.65fr] md:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#8a6f46]">
-                Featured stays
-              </p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-                Featured room types
-              </h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-[#5f6b7a]">
-                Explore room categories guests can reserve online. Current
-                availability updates as reservations are made.
-              </p>
+              <p className="reservation-kicker">Featured stays</p>
+              <h2 className="reservation-heading mt-4">Rooms, considered for the way you travel.</h2>
             </div>
+            <p className="max-w-lg text-sm leading-7 text-[#66716c] md:justify-self-end">Each room category pairs practical comfort with a calm sense of place. Availability is live, so what you see is ready to reserve.</p>
             <Link
-              className="text-sm font-semibold text-[#172033]"
+              className="text-xs font-bold uppercase tracking-[0.14em] text-[#173b32] underline decoration-[#b58d55] underline-offset-8 md:col-start-2 md:justify-self-end"
               href={publicReservationPath("/rooms")}
             >
               See all rooms
@@ -46,13 +39,13 @@ export default async function PublicHomePage() {
         </MotionReveal>
 
         {featuredRoomTypes.length > 0 ? (
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
+          <div className="mt-10 grid gap-x-6 gap-y-10 md:grid-cols-3">
             {featuredRoomTypes.map((roomType) => (
               <RoomTypeCard compact key={roomType.slug} roomType={roomType} />
             ))}
           </div>
         ) : (
-          <div className="mt-8 rounded-2xl border border-dashed border-black/15 bg-white/70 p-8 text-center">
+          <div className="mt-10 border border-dashed border-[#c9c1b4] bg-[#fbfaf6] p-10 text-center">
             <p className="font-semibold text-[#172033]">
               Room types are being prepared.
             </p>

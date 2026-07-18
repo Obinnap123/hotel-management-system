@@ -1,5 +1,11 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Demo-request email notifications
+
+Demo requests are saved to PostgreSQL before a Resend notification is attempted. Configure `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `RESEND_SALES_RECIPIENTS` in the deployment environment. `RESEND_SALES_RECIPIENTS` accepts comma-, semicolon-, or newline-separated addresses. None of these variables should use the `NEXT_PUBLIC_` prefix.
+
+If Resend is unavailable or misconfigured, the notification error is logged with the saved lead ID and the successful database lead remains intact.
+
 ## Getting Started
 
 First, run the development server:

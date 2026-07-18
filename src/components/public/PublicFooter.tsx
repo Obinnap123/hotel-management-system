@@ -1,105 +1,41 @@
 import Link from "next/link";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { publicReservationPath } from "@/lib/public/routes";
 
-type PublicFooterProps = {
-  hotelName: string;
-  phoneNumber: string;
-  emailAddress: string;
-  physicalAddress: string;
-};
+type PublicFooterProps = { hotelName: string; phoneNumber: string; emailAddress: string; physicalAddress: string };
 
-export function PublicFooter({
-  emailAddress,
-  hotelName,
-  phoneNumber,
-  physicalAddress,
-}: PublicFooterProps) {
-  const displayAddress = physicalAddress || "Address available on request";
-  const displayPhone = phoneNumber || "Reception available on request";
-  const displayEmail = emailAddress || "reservations available on request";
-
+export function PublicFooter({ emailAddress, hotelName, phoneNumber, physicalAddress }: PublicFooterProps) {
   return (
-    <footer className="border-t border-white/10 bg-[#101725] text-white">
-      <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.7fr_0.9fr_0.9fr]">
-          <div>
-            <p className="text-xl font-semibold tracking-tight">{hotelName}</p>
-            <p className="mt-4 max-w-sm text-sm leading-7 text-white/66">
-              Elegant stays, thoughtful service, and reservations that flow
-              directly into hotel operations.
-            </p>
-            <Link
-              className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#172033] transition hover:bg-white/90"
-              href={publicReservationPath("/book")}
-            >
-              Reserve your stay
-            </Link>
+    <footer className="bg-[#102d26] text-white">
+      <div className="reservation-container py-16 sm:py-20">
+        <div className="grid gap-12 lg:grid-cols-[1.15fr_.55fr_.85fr]">
+          <div className="max-w-md">
+            <p className="reservation-kicker text-[#e3ce9f]!">Stay with us</p>
+            <h2 className="mt-4 font-serif text-4xl leading-[1.02] tracking-[-0.03em] sm:text-5xl">A more considered stay starts here.</h2>
+            <Link className="mt-8 inline-flex h-12 items-center gap-3 bg-[#e5d2a9] px-6 text-xs font-bold uppercase tracking-[0.14em] text-[#17382f] transition hover:bg-white" href={publicReservationPath("/book")}>Reserve your stay <ArrowUpRight aria-hidden="true" className="h-4 w-4" /></Link>
           </div>
-
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#d6bd8d]">
-              Explore
-            </p>
-            <nav className="mt-4 grid gap-3 text-sm text-white/68">
-              <Link className="transition hover:text-white" href={publicReservationPath("/")}>
-                Home
-              </Link>
-              <Link className="transition hover:text-white" href={publicReservationPath("/rooms")}>
-                Rooms
-              </Link>
-              <Link className="transition hover:text-white" href={publicReservationPath("/book")}>
-                Reserve
-              </Link>
-              <Link className="transition hover:text-white" href="/login">
-                Staff Login
-              </Link>
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/65">Explore</p>
+            <nav aria-label="Footer navigation" className="mt-6 grid gap-4 text-sm text-white/72">
+              <Link className="hover:text-white" href={publicReservationPath("/")}>Home</Link>
+              <Link className="hover:text-white" href={publicReservationPath("/rooms")}>Rooms & suites</Link>
+              <Link className="hover:text-white" href={publicReservationPath("/#about")}>Our hotel</Link>
+              <Link className="hover:text-white" href={publicReservationPath("/book")}>Reservations</Link>
             </nav>
           </div>
-
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#d6bd8d]">
-              Reservations
-            </p>
-            <p className="mt-4 text-sm leading-7 text-white/68">
-              Book online and present your booking number at reception when you
-              arrive.
-            </p>
-            <p className="mt-3 text-sm leading-7 text-white/68">
-              Payments, check-in, and check-out are completed by hotel staff.
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#d6bd8d]">
-              Contact
-            </p>
-            <div className="mt-4 grid gap-3 text-sm text-white/68">
-              <p className="flex gap-3">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
-                <span>{displayAddress}</span>
-              </p>
-              <p className="flex gap-3">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
-                <span>{displayPhone}</span>
-              </p>
-              <p className="flex gap-3">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#d6bd8d]" />
-                <span>{displayEmail}</span>
-              </p>
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/65">Find us</p>
+            <div className="mt-6 grid gap-5 text-sm leading-6 text-white/72">
+              {physicalAddress ? <p className="flex gap-3"><MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#ddc796]" />{physicalAddress}</p> : null}
+              {phoneNumber ? <a className="flex gap-3 hover:text-white" href={`tel:${phoneNumber}`}><Phone aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#ddc796]" />{phoneNumber}</a> : null}
+              {emailAddress ? <a className="flex gap-3 break-all hover:text-white" href={`mailto:${emailAddress}`}><Mail aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#ddc796]" />{emailAddress}</a> : null}
+              {!physicalAddress && !phoneNumber && !emailAddress ? <p>Contact details are available through hotel reception.</p> : null}
             </div>
           </div>
         </div>
-
-        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/48 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            &copy; {new Date().getFullYear()} {hotelName}. All rights
-            reserved.
-          </p>
-          <p>
-            Public reservations connected to the internal Hotel Management
-            System.
-          </p>
+        <div className="mt-16 flex flex-col gap-4 border-t border-white/12 pt-6 text-[0.68rem] uppercase tracking-[0.12em] text-white/65 sm:flex-row sm:items-center sm:justify-between">
+          <p>&copy; {new Date().getFullYear()} {hotelName}</p>
+          <div className="flex items-center gap-5"><p>Direct reservations</p><Link className="hover:text-white" href="/login">Staff login</Link></div>
         </div>
       </div>
     </footer>

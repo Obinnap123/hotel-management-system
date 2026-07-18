@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db/prisma";
+import { sendDemoRequestNotification } from "@/lib/email/demo-request-notification";
 import { demoRequestSchema } from "./validation";
 
 export type DemoRequestActionState = {
@@ -27,7 +28,7 @@ export async function createDemoRequestAction(
   }
 
   try {
-    await prisma.demoRequest.create({
+    const lead = await prisma.demoRequest.create({
       data: {
         fullName: parsed.data.fullName,
         workEmail: parsed.data.workEmail,
@@ -39,6 +40,18 @@ export async function createDemoRequestAction(
         additionalNotes: parsed.data.additionalNotes || null,
       },
     });
+
+    try {
+      await sendDemoRequestNotification(lead);
+    } catch (emailError) {
+      // The lead is already durable in the database. Notification delivery must
+      // never turn a successful capture into a failed submission.
+      console.error("[Demo request email notification failed]", {
+        leadId: lead.id,
+        error:
+          emailError instanceof Error ? emailError.message : "Unknown error",
+      });
+    }
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       return {

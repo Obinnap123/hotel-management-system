@@ -145,6 +145,113 @@
   color: var(--text-strong);
 }
 
+.reservation-theme {
+  --background: #f4f1e9;
+  --foreground: #22312d;
+  --primary: #173b32;
+  --primary-hover: #225044;
+  --button-primary-bg: #173b32;
+  --button-primary-hover: #225044;
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: transparent;
+  --button-secondary-border: rgba(34, 49, 45, 0.24);
+  --button-secondary-hover: #ebe6dc;
+  --button-secondary-text: #22312d;
+  --button-ghost-hover: rgba(34, 49, 45, 0.07);
+  --ring: rgba(184, 142, 78, 0.28);
+  --reservation-ink: #22312d;
+  --reservation-green: #173b32;
+  --reservation-green-soft: #dfe7e2;
+  --reservation-ivory: #f4f1e9;
+  --reservation-paper: #fbfaf6;
+  --reservation-brass: #a67c45;
+  --reservation-line: #d9d3c8;
+  --reservation-muted: #66716c;
+  --reservation-gutter: 1.5rem;
+  background: var(--reservation-ivory);
+  color: var(--reservation-ink);
+  color-scheme: light;
+  font-feature-settings: "kern", "liga", "clig";
+}
+
+.reservation-theme ::selection {
+  background: #d8c49e;
+  color: #173b32;
+}
+
+.reservation-display,
+.reservation-heading {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.reservation-display {
+  font-size: clamp(3.25rem, 8vw, 7.5rem);
+  line-height: 0.88;
+}
+
+.reservation-heading {
+  font-size: clamp(2.25rem, 4.5vw, 4.6rem);
+  line-height: 0.98;
+}
+
+.reservation-kicker {
+  color: var(--reservation-brass);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+}
+
+.reservation-container {
+  width: min(calc(100% - (var(--reservation-gutter) * 2)), 82rem);
+  margin-inline: auto;
+}
+
+.reservation-section {
+  padding-block: clamp(4.5rem, 8vw, 8rem);
+}
+
+.reservation-theme input,
+.reservation-theme select,
+.reservation-theme textarea {
+  border-color: var(--reservation-line);
+  border-radius: 0;
+  background: #fff;
+  color: var(--reservation-ink) !important;
+}
+
+.reservation-theme :focus-visible {
+  outline: 2px solid var(--reservation-brass);
+  outline-offset: 3px;
+}
+
+@media (min-width: 640px) {
+  .reservation-theme {
+    --reservation-gutter: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .reservation-theme {
+    --reservation-gutter: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reservation-theme *,
+  .reservation-theme *::before,
+  .reservation-theme *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 .marketing-theme input,
 .marketing-theme select,
 .marketing-theme textarea {

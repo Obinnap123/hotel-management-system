@@ -6,6 +6,10 @@ const roomTypeFolder = "hotel-management-system/room-types";
 let configured = false;
 
 export async function uploadRoomTypeImage(file: File) {
+  return uploadHotelImage(file, roomTypeFolder);
+}
+
+export async function uploadHotelImage(file: File, folder: string) {
   assertImageFile(file);
 
   try {
@@ -23,7 +27,7 @@ export async function uploadRoomTypeImage(file: File) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const dataUri = `data:${file.type};base64,${buffer.toString("base64")}`;
 
-    const result = await uploadDataUri(dataUri, roomTypeFolder);
+    const result = await uploadDataUri(dataUri, folder);
 
     return {
       publicId: result.public_id,
@@ -43,6 +47,10 @@ export async function uploadRoomTypeImage(file: File) {
 }
 
 export async function deleteRoomTypeImage(publicId: string) {
+  return deleteHotelImage(publicId);
+}
+
+export async function deleteHotelImage(publicId: string) {
   if (!publicId) {
     return;
   }

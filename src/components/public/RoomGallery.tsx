@@ -1,115 +1,36 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
-type RoomGalleryProps = {
-  roomName: string;
-  coverImage: string | null;
-  galleryImages: string[];
-};
+type RoomGalleryProps = { roomName: string; coverImage: string | null; galleryImages: string[] };
 
-export function RoomGallery({
-  coverImage,
-  galleryImages,
-  roomName,
-}: RoomGalleryProps) {
-  const images = useMemo(() => {
-    const uniqueImages = Array.from(
-      new Set([coverImage ?? fallbackRoomImage, ...galleryImages].filter(Boolean)),
-    );
-
-    return uniqueImages.length > 0 ? uniqueImages : [fallbackRoomImage];
-  }, [coverImage, galleryImages]);
+export function RoomGallery({ coverImage, galleryImages, roomName }: RoomGalleryProps) {
+  const images = useMemo(() => Array.from(new Set([coverImage ?? fallbackRoomImage, ...galleryImages].filter(Boolean))), [coverImage, galleryImages]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeImage = images[activeIndex] ?? images[0];
+  const activeImage = images[activeIndex] ?? images[0] ?? fallbackRoomImage;
   const hasMultipleImages = images.length > 1;
 
-  function showPreviousImage() {
-    setActiveIndex((current) =>
-      current === 0 ? images.length - 1 : current - 1,
-    );
-  }
-
-  function showNextImage() {
-    setActiveIndex((current) =>
-      current === images.length - 1 ? 0 : current + 1,
-    );
-  }
-
   return (
-    <div className="space-y-3">
-      <div className="group relative overflow-hidden rounded-2xl bg-[#ebe3d7] shadow-[0_18px_45px_rgba(23,32,51,0.08)]">
+    <div>
+      <div className="group relative overflow-hidden bg-[#dfe5e0]">
         <AnimatePresence mode="wait">
-          <motion.img
-            alt={`${roomName} room view ${activeIndex + 1}`}
-            animate={{ opacity: 1, scale: 1 }}
-            className="aspect-[4/3] w-full object-cover sm:aspect-[16/11] lg:aspect-[4/3]"
-            exit={{ opacity: 0, scale: 1.01 }}
-            initial={{ opacity: 0, scale: 1.01 }}
-            key={activeImage}
-            src={activeImage}
-            transition={{ duration: 0.28, ease: "easeOut" }}
-          />
+          <motion.div animate={{ opacity: 1 }} className="relative aspect-[4/3] sm:aspect-[16/11] lg:aspect-[4/5]" exit={{ opacity: 0 }} initial={{ opacity: 0 }} key={activeImage} transition={{ duration: 0.3 }}>
+            <Image alt={`${roomName} room view ${activeIndex + 1}`} className="object-cover" fill priority sizes="(max-width: 1023px) 100vw, 55vw" src={activeImage} unoptimized={activeImage.includes("res.cloudinary.com")} />
+          </motion.div>
         </AnimatePresence>
-
-        {hasMultipleImages ? (
-          <>
-            <button
-              aria-label="Previous room image"
-              className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-[#172033]/75 text-white shadow-lg backdrop-blur transition hover:bg-[#172033]"
-              onClick={showPreviousImage}
-              type="button"
-            >
-              <ChevronLeft aria-hidden="true" className="h-5 w-5" />
-            </button>
-            <button
-              aria-label="Next room image"
-              className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-[#172033]/75 text-white shadow-lg backdrop-blur transition hover:bg-[#172033]"
-              onClick={showNextImage}
-              type="button"
-            >
-              <ChevronRight aria-hidden="true" className="h-5 w-5" />
-            </button>
-            <div className="absolute bottom-3 right-3 rounded-full bg-[#172033]/78 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
-              {activeIndex + 1} / {images.length}
-            </div>
-          </>
-        ) : null}
+        {hasMultipleImages ? <><GalleryButton direction="previous" onClick={() => setActiveIndex((current) => current === 0 ? images.length - 1 : current - 1)} /><GalleryButton direction="next" onClick={() => setActiveIndex((current) => current === images.length - 1 ? 0 : current + 1)} /><p className="absolute bottom-4 right-4 bg-[#173b32] px-3 py-2 text-[0.65rem] font-semibold tracking-[0.12em] text-white">{String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</p></> : null}
       </div>
-
-      {hasMultipleImages ? (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
-          {images.map((image, index) => {
-            const isActive = index === activeIndex;
-
-            return (
-              <button
-                aria-label={`Show ${roomName} image ${index + 1}`}
-                aria-pressed={isActive}
-                className={`overflow-hidden rounded-xl border bg-white p-1 transition ${
-                  isActive
-                    ? "border-[#172033] shadow-[0_0_0_2px_rgba(23,32,51,0.12)]"
-                    : "border-black/10 hover:border-[#8a6f46]"
-                }`}
-                key={`${image}-${index}`}
-                onClick={() => setActiveIndex(index)}
-                type="button"
-              >
-                <img
-                  alt=""
-                  className="aspect-[4/3] w-full rounded-lg object-cover"
-                  src={image}
-                />
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {hasMultipleImages ? <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5">{images.map((image, index) => <button aria-label={`Show ${roomName} image ${index + 1}`} aria-pressed={index === activeIndex} className={`relative aspect-[4/3] overflow-hidden border-2 ${index === activeIndex ? "border-[#a67c45]" : "border-transparent opacity-68 hover:opacity-100"}`} key={`${image}-${index}`} onClick={() => setActiveIndex(index)} type="button"><Image alt="" className="object-cover" fill sizes="160px" src={image} unoptimized={image.includes("res.cloudinary.com")} /></button>)}</div> : null}
     </div>
   );
 }
 
-const fallbackRoomImage =
-  "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80";
+function GalleryButton({ direction, onClick }: { direction: "previous" | "next"; onClick: () => void }) {
+  const Icon = direction === "previous" ? ChevronLeft : ChevronRight;
+  return <button aria-label={`${direction === "previous" ? "Previous" : "Next"} room image`} className={`absolute top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center bg-[#173b32]/88 text-white transition hover:bg-[#173b32] ${direction === "previous" ? "left-3" : "right-3"}`} onClick={onClick} type="button"><Icon aria-hidden="true" className="h-5 w-5" /></button>;
+}
+
+const fallbackRoomImage = "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1400&q=84";

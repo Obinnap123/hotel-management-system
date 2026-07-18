@@ -1,56 +1,40 @@
 import Link from "next/link";
+import { ArrowLeft, Check, Clock3, ShieldCheck } from "lucide-react";
 import { BookingForm } from "@/components/public/BookingForm";
 import { getAllPublicRoomTypes } from "@/features/public-room-types/queries";
+import { getHotelSettings } from "@/features/settings/queries";
 import { publicReservationPath } from "@/lib/public/routes";
 
 export const dynamic = "force-dynamic";
+type Props = { searchParams?: Promise<{ checkInDate?: string; checkOutDate?: string; guestCount?: string; roomType?: string }> };
 
-type PublicBookPageProps = {
-  searchParams?: Promise<{
-    checkInDate?: string;
-    checkOutDate?: string;
-    guestCount?: string;
-    roomType?: string;
-  }>;
-};
-
-export default async function PublicBookPage({
-  searchParams,
-}: PublicBookPageProps) {
-  const [roomTypes, params] = await Promise.all([
-    getAllPublicRoomTypes(),
-    searchParams,
-  ]);
+export default async function PublicBookPage({ searchParams }: Props) {
+  const [roomTypes, params, settings] = await Promise.all([getAllPublicRoomTypes(), searchParams, getHotelSettings()]);
 
   return (
-    <section className="mx-auto max-w-4xl px-5 py-12 lg:px-8">
-      <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#8a6f46]">
-          Reservation
-        </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight">
-          Reserve your stay
-        </h1>
-        <p className="mt-4 text-[#5f6b7a]">
-          This page is ready for the public reservation form. The reservation
-          logic already connects to the HMS workflow.
-        </p>
-
-        <BookingForm
-          defaultCheckInDate={params?.checkInDate}
-          defaultCheckOutDate={params?.checkOutDate}
-          defaultGuestCount={params?.guestCount}
-          defaultRoomTypeSlug={params?.roomType}
-          roomTypes={roomTypes}
-        />
-
-        <Link
-          className="mt-6 inline-flex rounded-full bg-[#172033] px-5 py-3 text-sm font-semibold text-white"
-          href={publicReservationPath("/rooms")}
-        >
-          Back to rooms
-        </Link>
+    <section className="reservation-container reservation-section py-10! sm:py-16!">
+      <Link className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-[#53605b] hover:text-[#173b32]" href={publicReservationPath("/rooms")}><ArrowLeft aria-hidden="true" className="h-4 w-4" /> Browse rooms</Link>
+      <div className="mt-8 grid gap-10 lg:grid-cols-[.72fr_1.28fr] lg:gap-16">
+        <aside className="order-2 bg-[#173b32] p-7 text-white sm:p-10 lg:order-1 lg:sticky lg:top-28 lg:self-start">
+          <p className="reservation-kicker text-[#e3ce9f]!">Direct reservation</p>
+          <h1 className="mt-5 font-serif text-4xl leading-[1.02] tracking-[-0.03em] sm:text-5xl">Your stay at {settings.hotelName}.</h1>
+          <p className="mt-6 text-sm leading-7 text-white/65">Share your preferred room and dates. The request enters the hotel’s live reservation system for reception to prepare your stay.</p>
+          <ul className="mt-9 border-t border-white/15">
+            <Assurance icon={<ShieldCheck />} text="Your details go directly to hotel reception" />
+            <Assurance icon={<Clock3 />} text={`Standard check-in ${settings.defaultCheckInTime}; check-out ${settings.defaultCheckOutTime}`} />
+            <Assurance icon={<Check />} text="No guest account or separate sign-in required" />
+          </ul>
+          {(settings.phoneNumber || settings.emailAddress) ? <div className="mt-8 border-t border-white/15 pt-6 text-xs leading-6 text-white/50"><p>Need help before reserving?</p>{settings.phoneNumber ? <a className="mt-1 block text-white/80 hover:text-white" href={`tel:${settings.phoneNumber}`}>{settings.phoneNumber}</a> : null}{settings.emailAddress ? <a className="block break-all text-white/80 hover:text-white" href={`mailto:${settings.emailAddress}`}>{settings.emailAddress}</a> : null}</div> : null}
+        </aside>
+        <div className="order-1 bg-[#fbfaf6] p-6 sm:p-10 lg:order-2 lg:p-12">
+          <p className="reservation-kicker">Reservation details</p>
+          <h2 className="mt-4 font-serif text-4xl tracking-[-0.03em] text-[#22312d]">Plan your arrival.</h2>
+          <p className="mt-4 max-w-xl text-sm leading-7 text-[#66716c]">All fields are required unless marked optional. Your reservation goes directly to hotel reception.</p>
+          <BookingForm defaultCheckInDate={params?.checkInDate} defaultCheckOutDate={params?.checkOutDate} defaultGuestCount={params?.guestCount} defaultRoomTypeSlug={params?.roomType} roomTypes={roomTypes} />
+        </div>
       </div>
     </section>
   );
 }
+
+function Assurance({ icon, text }: { icon: React.ReactNode; text: string }) { return <li className="flex gap-3 border-b border-white/15 py-5 text-sm leading-6 text-white/75"><span aria-hidden="true" className="mt-0.5 text-[#ddc796] [&>svg]:h-4 [&>svg]:w-4">{icon}</span>{text}</li>; }

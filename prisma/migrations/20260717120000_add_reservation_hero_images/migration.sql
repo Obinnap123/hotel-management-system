@@ -1,0 +1,3 @@
+ALTER TABLE "HotelSettings"
+ADD COLUMN "heroImages" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN "heroImagePublicIds" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

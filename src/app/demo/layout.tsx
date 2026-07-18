@@ -12,7 +12,7 @@ export default async function PublicLayout({
   const settings = await getHotelSettings();
 
   return (
-    <div className="min-h-screen bg-[#f7f3ed] text-[#1f2933]">
+    <div className="reservation-theme min-h-screen">
       <PublicNavbar hotelName={settings.hotelName} />
       <main>{children}</main>
       <PublicFooter

@@ -16,7 +16,7 @@ export default async function BookingSuccessPage({
   const params = await searchParams;
 
   return (
-    <section className="mx-auto max-w-3xl px-5 py-16 lg:px-8">
+    <section className="reservation-container reservation-section max-w-4xl!">
       <BookingSuccessCard
         booking={params?.booking ?? "-"}
         checkIn={params?.checkIn ? formatPublicDate(params.checkIn) : "-"}
