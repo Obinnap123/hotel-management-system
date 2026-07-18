@@ -1,4 +1,5 @@
-const defaultReservationBasePath = "/demo";
+const defaultReservationBasePath =
+  process.env.NEXT_PUBLIC_DEPLOYMENT_MODE === "hotel" ? "" : "/demo";
 
 export const publicReservationBasePath = normalizeBasePath(
   process.env.NEXT_PUBLIC_RESERVATION_BASE_PATH ?? defaultReservationBasePath,
