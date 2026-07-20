@@ -10,6 +10,10 @@ export function createPrismaAdapter() {
 
   const pool = new Pool({
     connectionString: removeSslMode(connectionString),
+    max: 3,
+    connectionTimeoutMillis: 10_000,
+    idleTimeoutMillis: 10_000,
+    allowExitOnIdle: true,
     ssl: {
       rejectUnauthorized:
         process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false",
