@@ -75,6 +75,7 @@ export async function updateSettingsAction(
   }
 
   revalidatePath(settingsPath);
+  revalidatePath("/dashboard", "layout");
   revalidatePath("/demo", "layout");
   revalidatePath("/");
   return success("Settings updated.");
