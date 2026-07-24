@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { canAccessPath } from "@/lib/auth/permissions";
@@ -17,6 +18,17 @@ const navigationItems = [
   { href: "/dashboard/users", label: "Users" },
   { href: "/dashboard/settings", label: "Settings" },
 ] as const;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getHotelSettings();
+  const hotelName = settings.hotelName.trim() || "Hotel Management";
+
+  return {
+    title: {
+      absolute: `${hotelName} | HMS`,
+    },
+  };
+}
 
 export default async function DashboardLayout({
   children,
