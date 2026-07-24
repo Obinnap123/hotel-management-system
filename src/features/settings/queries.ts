@@ -1,7 +1,8 @@
+import { cache } from "react";
 import { prisma } from "@/server/db/prisma";
 import { retryTransientDatabaseDnsFailure } from "@/server/db/retry";
 
-export async function getHotelSettings() {
+export const getHotelSettings = cache(async function getHotelSettings() {
   return retryTransientDatabaseDnsFailure(async () => {
     const settings = await prisma.hotelSettings.findUnique({
       where: {
@@ -30,4 +31,4 @@ export async function getHotelSettings() {
       },
     });
   });
-}
+});

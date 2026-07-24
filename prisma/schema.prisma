@@ -164,6 +164,8 @@ model HotelSettings {
   defaultCheckInTime  String   @default("14:00")
   defaultCheckOutTime String   @default("12:00")
   currency            String   @default("NGN")
+  websiteTitle        String   @default("")
+  websiteDescription  String   @default("")
   heroImages          String[] @default([])
   heroImagePublicIds  String[] @default([])
   createdAt           DateTime @default(now())

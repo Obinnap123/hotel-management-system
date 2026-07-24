@@ -24,6 +24,8 @@ export type SettingsFormValues = {
   defaultCheckInTime: string;
   defaultCheckOutTime: string;
   currency: string;
+  websiteTitle: string;
+  websiteDescription: string;
   heroImages: string[];
   heroImagePublicIds: string[];
   updatedAt: string;
@@ -85,6 +87,44 @@ export function SettingsClient({ settings }: SettingsClientProps) {
             </SettingsField>
             <SettingsField className="sm:col-span-2" label="Physical address">
               <textarea className={`${inputClass} min-h-24 py-2`} defaultValue={settings.physicalAddress} name="physicalAddress" required />
+            </SettingsField>
+          </div>
+        </section>
+
+        <section className="space-y-4 border-t border-zinc-200 pt-5">
+          <div className="max-w-2xl">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+              Website &amp; search appearance
+            </h3>
+            <p className="mt-1 text-sm leading-6 text-zinc-600">
+              Control how the reservation website is identified in browser tabs,
+              search results, and shared links.
+            </p>
+          </div>
+          <div className="grid gap-4">
+            <SettingsField
+              hint="Up to 60 characters. Leave blank to use the hotel name automatically."
+              label="Website title"
+            >
+              <input
+                className={inputClass}
+                defaultValue={settings.websiteTitle}
+                maxLength={60}
+                name="websiteTitle"
+                placeholder={`${settings.hotelName} | Official Website & Reservations`}
+              />
+            </SettingsField>
+            <SettingsField
+              hint="Up to 160 characters. Leave blank to generate a booking-focused description."
+              label="Website description"
+            >
+              <textarea
+                className={`${inputClass} min-h-24 py-2`}
+                defaultValue={settings.websiteDescription}
+                maxLength={160}
+                name="websiteDescription"
+                placeholder={`Explore rooms, check availability, and book your stay directly with ${settings.hotelName}.`}
+              />
             </SettingsField>
           </div>
         </section>
@@ -224,8 +264,26 @@ function HeroPreview({ label, onRemove, src, unoptimized = false }: { label: str
   );
 }
 
-function SettingsField({ children, className = "", label }: { children: React.ReactNode; className?: string; label: string }) {
-  return <label className={`block ${className}`}><span className="text-sm font-medium text-zinc-800">{label}</span>{children}</label>;
+function SettingsField({
+  children,
+  className = "",
+  hint,
+  label,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  hint?: string;
+  label: string;
+}) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="text-sm font-medium text-zinc-800">{label}</span>
+      {children}
+      {hint ? (
+        <span className="mt-1 block text-xs leading-5 text-zinc-500">{hint}</span>
+      ) : null}
+    </label>
+  );
 }
 
 function mapExisting(settings: SettingsFormValues) {

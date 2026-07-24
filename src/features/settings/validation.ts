@@ -19,4 +19,12 @@ export const settingsFormSchema = z.object({
     .min(3, "Currency is required.")
     .max(3, "Use a 3-letter currency code.")
     .transform((value) => value.toUpperCase()),
+  websiteTitle: z
+    .string()
+    .trim()
+    .max(60, "Website title must be 60 characters or fewer."),
+  websiteDescription: z
+    .string()
+    .trim()
+    .max(160, "Website description must be 160 characters or fewer."),
 });

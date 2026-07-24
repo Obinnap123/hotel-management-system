@@ -17,6 +17,8 @@ export default async function SettingsPage() {
         defaultCheckInTime: settings.defaultCheckInTime,
         defaultCheckOutTime: settings.defaultCheckOutTime,
         currency: settings.currency,
+        websiteTitle: settings.websiteTitle,
+        websiteDescription: settings.websiteDescription,
         heroImages: settings.heroImages ?? [],
         heroImagePublicIds: settings.heroImagePublicIds ?? [],
         updatedAt: settings.updatedAt.toISOString(),
