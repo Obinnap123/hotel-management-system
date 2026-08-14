@@ -25,7 +25,7 @@ export type PublicRoomTypeSummary = {
   minPricePerNight: string | null;
   maxPricePerNight: string | null;
   capacity: number | null;
-  availableRoomCount: number;
+  roomInventoryCount: number;
 };
 
 export type PublicRoomTypeDetails = PublicRoomTypeSummary & {
@@ -46,8 +46,8 @@ export async function getFeaturedPublicRoomTypes(
     .map(toPublicRoomTypeSummary)
     .filter((roomType) => roomType.pricePerNight !== null)
     .sort((a, b) => {
-      if (a.availableRoomCount !== b.availableRoomCount) {
-        return b.availableRoomCount - a.availableRoomCount;
+      if (a.roomInventoryCount !== b.roomInventoryCount) {
+        return b.roomInventoryCount - a.roomInventoryCount;
       }
 
       const aHasImage = a.coverImage ? 1 : 0;
@@ -88,7 +88,7 @@ export async function getPublicRoomTypeBySlug(
   return toPublicRoomTypeDetails(roomType);
 }
 
-export async function getPublicRoomTypeAvailability(
+export async function getPublicRoomTypeInventory(
   slug: string,
 ): Promise<number> {
   const roomType = await prisma.roomType.findUnique({
@@ -98,7 +98,9 @@ export async function getPublicRoomTypeAvailability(
     select: {
       rooms: {
         where: {
-          status: RoomStatus.AVAILABLE,
+          status: {
+            not: RoomStatus.MAINTENANCE,
+          },
         },
         select: {
           id: true,
@@ -147,8 +149,8 @@ function toPublicRoomTypeSummary(
     minPricePerNight: minPrice ? formatDecimal(minPrice) : null,
     maxPricePerNight: maxPrice ? formatDecimal(maxPrice) : null,
     capacity: capacities.length > 0 ? Math.max(...capacities) : null,
-    availableRoomCount: roomType.rooms.filter(
-      (room) => room.status === RoomStatus.AVAILABLE,
+    roomInventoryCount: roomType.rooms.filter(
+      (room) => room.status !== RoomStatus.MAINTENANCE,
     ).length,
   };
 }

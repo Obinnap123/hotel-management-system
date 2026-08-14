@@ -23,6 +23,14 @@ export const roomStatusValues = [
 
 export type RoomStatusValue = (typeof roomStatusValues)[number];
 
+// RESERVED remains in the database enum for backward compatibility, but new
+// reservations are represented by Booking date ranges rather than room state.
+export const roomOperationalStatusValues = [
+  "AVAILABLE",
+  "OCCUPIED",
+  "MAINTENANCE",
+] as const;
+
 export const userRoleValues = ["ADMIN", "RECEPTIONIST"] as const;
 
 export type UserRoleValue = (typeof userRoleValues)[number];

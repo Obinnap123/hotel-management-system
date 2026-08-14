@@ -1,28 +1,18 @@
-import { SettingsClient } from "@/components/dashboard/SettingsClient";
+import { SettingsOverview } from "@/components/dashboard/settings/SettingsOverview";
 import { requireAdmin } from "@/features/rooms/authorization";
-import { getHotelSettings } from "@/features/settings/queries";
+import { getReservationSiteConfig } from "@/features/settings/queries";
 
 export default async function SettingsPage() {
   await requireAdmin();
 
-  const settings = await getHotelSettings();
+  const config = await getReservationSiteConfig();
 
   return (
-    <SettingsClient
-      settings={{
-        hotelName: settings.hotelName,
-        phoneNumber: settings.phoneNumber,
-        emailAddress: settings.emailAddress,
-        physicalAddress: settings.physicalAddress,
-        defaultCheckInTime: settings.defaultCheckInTime,
-        defaultCheckOutTime: settings.defaultCheckOutTime,
-        currency: settings.currency,
-        websiteTitle: settings.websiteTitle,
-        websiteDescription: settings.websiteDescription,
-        heroImages: settings.heroImages ?? [],
-        heroImagePublicIds: settings.heroImagePublicIds ?? [],
-        updatedAt: settings.updatedAt.toISOString(),
-      }}
+    <SettingsOverview
+      currency={config.hotel.currency}
+      heroImageCount={config.website.customHeroImages.length}
+      hotelName={config.hotel.name}
+      websiteTitle={config.website.configuredTitle}
     />
   );
 }

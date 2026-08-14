@@ -7,6 +7,7 @@ export type SessionPayload = {
   fullName: string;
   email: string;
   role: AppRole;
+  sessionVersion: number;
   expiresAt: number;
 };
 
@@ -35,7 +36,7 @@ export async function verifySessionToken(token: string, secret: string) {
   try {
     const payload = JSON.parse(base64UrlToString(encodedPayload)) as SessionPayload;
 
-    if (!payload.expiresAt || payload.expiresAt < Date.now()) {
+    if (!isSessionPayload(payload) || payload.expiresAt < Date.now()) {
       return null;
     }
 
@@ -43,6 +44,26 @@ export async function verifySessionToken(token: string, secret: string) {
   } catch {
     return null;
   }
+}
+
+function isSessionPayload(payload: unknown): payload is SessionPayload {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+
+  const candidate = payload as Partial<SessionPayload>;
+
+  return (
+    typeof candidate.userId === "string" &&
+    candidate.userId.length > 0 &&
+    typeof candidate.fullName === "string" &&
+    typeof candidate.email === "string" &&
+    (candidate.role === "ADMIN" || candidate.role === "RECEPTIONIST") &&
+    Number.isInteger(candidate.sessionVersion) &&
+    (candidate.sessionVersion ?? -1) >= 0 &&
+    typeof candidate.expiresAt === "number" &&
+    Number.isFinite(candidate.expiresAt)
+  );
 }
 
 async function signValue(value: string, secret: string) {

@@ -1,5 +1,4 @@
 import { BookingStatus, Prisma } from "@prisma/client";
-import { markRoomReserved } from "@/features/rooms/status";
 import { prisma } from "@/server/db/prisma";
 import type { PaymentFormInput } from "./validation";
 import { toDate } from "@/features/bookings/validation";
@@ -69,8 +68,6 @@ export async function createPayment(
         status: BookingStatus.CONFIRMED,
       },
     });
-
-    await markRoomReserved(booking.roomId, tx);
 
     return payment;
   });

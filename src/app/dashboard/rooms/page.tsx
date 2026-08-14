@@ -1,7 +1,7 @@
 import { RoomClient } from "@/components/dashboard/RoomClient";
 import { isAdminRole } from "@/features/rooms/authorization";
 import { getRooms, getRoomTypes } from "@/features/rooms/queries";
-import { getCurrentSession } from "@/server/auth/session";
+import { getCurrentActiveSession } from "@/server/auth/session";
 
 type RoomsPageProps = {
   searchParams?: Promise<{
@@ -27,7 +27,7 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
   const [rooms, roomTypes, session, params] = await Promise.all([
     getRooms(),
     getRoomTypes(),
-    getCurrentSession(),
+    getCurrentActiveSession(),
     searchParams,
   ]);
   const notice = params?.success ? successMessages[params.success] : undefined;

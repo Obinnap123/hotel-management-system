@@ -7,10 +7,13 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test src/**/*.test.ts",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:preflight-bookings": "tsx scripts/check-booking-overlaps.ts",
+    "db:verify-settings-foundation": "tsx scripts/verify-settings-foundation.ts",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed/index.ts"
   },

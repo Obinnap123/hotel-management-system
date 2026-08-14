@@ -1,7 +1,14 @@
-import { BookingStatus, Prisma, RoomStatus, UserRole, UserStatus } from "@prisma/client";
+import { BookingStatus, Prisma, UserRole, UserStatus } from "@prisma/client";
+import {
+  calculateStayNights,
+  isValidStayDateRange,
+} from "@/features/bookings/rules";
 import { findAvailableRoomForRoomType } from "@/lib/public/availability";
 import { formatPublicBookingNumber } from "@/lib/public/format";
-import { prisma } from "@/server/db/prisma";
+import {
+  isOverlappingBookingConstraintError,
+  runSerializableTransaction,
+} from "@/server/db/transaction";
 import type { PublicReservationInput } from "./validation";
 import { toPublicDate } from "./validation";
 
@@ -20,8 +27,8 @@ export async function createPublicReservation(
 ): Promise<PublicReservationResult> {
   const dates = parseReservationDates(input);
 
-  return prisma.$transaction(
-    async (tx) => {
+  try {
+    return await runSerializableTransaction(async (tx) => {
       const roomType = await tx.roomType.findUnique({
         where: {
           slug: input.roomTypeSlug,
@@ -81,15 +88,6 @@ export async function createPublicReservation(
         },
       });
 
-      await tx.room.update({
-        where: {
-          id: room.id,
-        },
-        data: {
-          status: RoomStatus.RESERVED,
-        },
-      });
-
       return {
         bookingId: booking.id,
         bookingNumber: formatPublicBookingNumber(booking.id),
@@ -97,19 +95,27 @@ export async function createPublicReservation(
         checkInDate: booking.checkInDate,
         checkOutDate: booking.checkOutDate,
       };
-    },
-    {
-      maxWait: 10000,
-      timeout: 15000,
-    },
-  );
+    });
+  } catch (error) {
+    if (isOverlappingBookingConstraintError(error)) {
+      throw new PublicReservationRuleError(
+        "That room was just reserved. Please try again to see the latest availability.",
+      );
+    }
+
+    throw error;
+  }
 }
 
 function parseReservationDates(input: PublicReservationInput) {
   const checkInDate = toPublicDate(input.checkInDate);
   const checkOutDate = toPublicDate(input.checkOutDate);
 
-  if (!checkInDate || !checkOutDate || checkOutDate <= checkInDate) {
+  if (
+    !checkInDate ||
+    !checkOutDate ||
+    !isValidStayDateRange(checkInDate, checkOutDate)
+  ) {
     throw new PublicReservationRuleError("Enter a valid reservation date range.");
   }
 
@@ -229,13 +235,7 @@ function calculateReservationTotal({
   checkOutDate: Date;
   pricePerNight: Prisma.Decimal;
 }) {
-  const millisecondsPerDay = 1000 * 60 * 60 * 24;
-  const nights = Math.max(
-    1,
-    Math.ceil(
-      (checkOutDate.getTime() - checkInDate.getTime()) / millisecondsPerDay,
-    ),
-  );
+  const nights = calculateStayNights(checkInDate, checkOutDate);
 
   return pricePerNight.mul(nights);
 }

@@ -1,9 +1,12 @@
 import { BookingStatus, Prisma, RoomStatus } from "@prisma/client";
 import {
-  markRoomAvailable,
-  markRoomReserved,
-} from "@/features/rooms/status";
-import { prisma } from "@/server/db/prisma";
+  calculateStayNights,
+  isValidStayDateRange,
+} from "@/features/bookings/rules";
+import {
+  isOverlappingBookingConstraintError,
+  runSerializableTransaction,
+} from "@/server/db/transaction";
 import type { BookingFormInput } from "./validation";
 import { toDate } from "./validation";
 
@@ -26,93 +29,89 @@ export async function createBooking(
 ) {
   const dates = parseBookingDates(input);
 
-  return prisma.$transaction(async (tx) => {
-    await validateGuestExists(input.guestId, tx);
-    const room = await validateRoomCanBeBooked({
-      roomId: input.roomId,
-      checkInDate: dates.checkInDate,
-      checkOutDate: dates.checkOutDate,
-      tx,
-    });
-    const totalAmount = calculateBookingTotal({
-      checkInDate: dates.checkInDate,
-      checkOutDate: dates.checkOutDate,
-      pricePerNight: room.pricePerNight,
-    });
-
-    const booking = await tx.booking.create({
-      data: {
-        guestId: input.guestId,
+  try {
+    return await runSerializableTransaction(async (tx) => {
+      await validateGuestExists(input.guestId, tx);
+      const room = await validateRoomCanBeBooked({
         roomId: input.roomId,
         checkInDate: dates.checkInDate,
         checkOutDate: dates.checkOutDate,
-        totalAmount,
-        createdById,
-        status: BookingStatus.PENDING,
-      },
+        tx,
+      });
+      const totalAmount = calculateBookingTotal({
+        checkInDate: dates.checkInDate,
+        checkOutDate: dates.checkOutDate,
+        pricePerNight: room.pricePerNight,
+      });
+
+      return tx.booking.create({
+        data: {
+          guestId: input.guestId,
+          roomId: input.roomId,
+          checkInDate: dates.checkInDate,
+          checkOutDate: dates.checkOutDate,
+          totalAmount,
+          createdById,
+          status: BookingStatus.PENDING,
+        },
+      });
     });
-
-    await markRoomReserved(input.roomId, tx);
-
-    return booking;
-  });
+  } catch (error) {
+    throwFriendlyOverlapError(error);
+  }
 }
 
 export async function updateBooking(bookingId: string, input: BookingFormInput) {
   const dates = parseBookingDates(input);
 
-  return prisma.$transaction(async (tx) => {
-    const existingBooking = await tx.booking.findUnique({
-      where: { id: bookingId },
-    });
+  try {
+    return await runSerializableTransaction(async (tx) => {
+      const existingBooking = await tx.booking.findUnique({
+        where: { id: bookingId },
+      });
 
-    if (!existingBooking) {
-      throw new BookingRuleError("Booking was not found.");
-    }
+      if (!existingBooking) {
+        throw new BookingRuleError("Booking was not found.");
+      }
 
-    if (!editableBookingStatuses.includes(existingBooking.status)) {
-      throw new BookingRuleError(
-        "Only pending or confirmed bookings can be edited.",
-      );
-    }
+      if (!editableBookingStatuses.includes(existingBooking.status)) {
+        throw new BookingRuleError(
+          "Only pending or confirmed bookings can be edited.",
+        );
+      }
 
-    await validateGuestExists(input.guestId, tx);
-    const room = await validateRoomCanBeBooked({
-      roomId: input.roomId,
-      checkInDate: dates.checkInDate,
-      checkOutDate: dates.checkOutDate,
-      excludeBookingId: bookingId,
-      tx,
-    });
-    const totalAmount = calculateBookingTotal({
-      checkInDate: dates.checkInDate,
-      checkOutDate: dates.checkOutDate,
-      pricePerNight: room.pricePerNight,
-    });
-
-    const updatedBooking = await tx.booking.update({
-      where: { id: bookingId },
-      data: {
-        guestId: input.guestId,
+      await validateGuestExists(input.guestId, tx);
+      const room = await validateRoomCanBeBooked({
         roomId: input.roomId,
         checkInDate: dates.checkInDate,
         checkOutDate: dates.checkOutDate,
-        totalAmount,
-      },
+        excludeBookingId: bookingId,
+        tx,
+      });
+      const totalAmount = calculateBookingTotal({
+        checkInDate: dates.checkInDate,
+        checkOutDate: dates.checkOutDate,
+        pricePerNight: room.pricePerNight,
+      });
+
+      return tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          guestId: input.guestId,
+          roomId: input.roomId,
+          checkInDate: dates.checkInDate,
+          checkOutDate: dates.checkOutDate,
+          totalAmount,
+        },
+      });
     });
-
-    if (existingBooking.roomId !== input.roomId) {
-      await markRoomAvailable(existingBooking.roomId, tx);
-    }
-
-    await markRoomReserved(input.roomId, tx);
-
-    return updatedBooking;
-  });
+  } catch (error) {
+    throwFriendlyOverlapError(error);
+  }
 }
 
 export async function cancelBooking(bookingId: string) {
-  return prisma.$transaction(async (tx) => {
+  return runSerializableTransaction(async (tx) => {
     const booking = await tx.booking.findUnique({
       where: { id: bookingId },
     });
@@ -127,16 +126,12 @@ export async function cancelBooking(bookingId: string) {
       );
     }
 
-    const cancelledBooking = await tx.booking.update({
+    return tx.booking.update({
       where: { id: bookingId },
       data: {
         status: BookingStatus.CANCELLED,
       },
     });
-
-    await markRoomAvailable(booking.roomId, tx);
-
-    return cancelledBooking;
   });
 }
 
@@ -144,7 +139,11 @@ function parseBookingDates(input: BookingFormInput) {
   const checkInDate = toDate(input.checkInDate);
   const checkOutDate = toDate(input.checkOutDate);
 
-  if (!checkInDate || !checkOutDate || checkOutDate <= checkInDate) {
+  if (
+    !checkInDate ||
+    !checkOutDate ||
+    !isValidStayDateRange(checkInDate, checkOutDate)
+  ) {
     throw new BookingRuleError("Enter a valid booking date range.");
   }
 
@@ -232,13 +231,17 @@ function calculateBookingTotal({
   checkOutDate: Date;
   pricePerNight: Prisma.Decimal;
 }) {
-  const millisecondsPerDay = 1000 * 60 * 60 * 24;
-  const nights = Math.max(
-    1,
-    Math.ceil(
-      (checkOutDate.getTime() - checkInDate.getTime()) / millisecondsPerDay,
-    ),
-  );
+  const nights = calculateStayNights(checkInDate, checkOutDate);
 
   return pricePerNight.mul(nights);
+}
+
+function throwFriendlyOverlapError(error: unknown): never {
+  if (isOverlappingBookingConstraintError(error)) {
+    throw new BookingRuleError(
+      "This room was just booked for the selected dates. Choose another room or date range.",
+    );
+  }
+
+  throw error;
 }

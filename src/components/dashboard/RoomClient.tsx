@@ -16,7 +16,7 @@ import {
   type ActionState,
 } from "@/features/rooms/actions";
 import {
-  roomStatusValues,
+  roomOperationalStatusValues,
   type RoomStatusValue,
 } from "@/lib/domain/hms-enums";
 import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
@@ -124,7 +124,7 @@ export function RoomClient({
             value={statusFilter}
           >
             <option value="ALL">All statuses</option>
-            {roomStatusValues.map((status) => (
+            {roomOperationalStatusValues.map((status) => (
               <option key={status} value={status}>
                 {status}
               </option>
@@ -381,7 +381,7 @@ function RoomForm({
 
       <label className="block">
         <span className="text-sm font-medium text-zinc-800">
-          Status (MVP admin only)
+          Current room condition
         </span>
         <select
           className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-zinc-900"
@@ -389,7 +389,7 @@ function RoomForm({
           name="status"
           required
         >
-          {roomStatusValues.map((status) => (
+          {roomOperationalStatusValues.map((status) => (
             <option key={status} value={status}>
               {status}
             </option>
