@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { prisma } from "@/server/db/prisma";
 import { retryTransientDatabaseDnsFailure } from "@/server/db/retry";
+import { buildReservationSiteConfig } from "./reservation-site-config";
 
 export const getHotelSettings = cache(async function getHotelSettings() {
   return retryTransientDatabaseDnsFailure(async () => {
@@ -32,3 +33,27 @@ export const getHotelSettings = cache(async function getHotelSettings() {
     });
   });
 });
+
+export const getReservationSiteConfig = cache(
+  async function getReservationSiteConfig() {
+    const hotel = await getHotelSettings();
+
+    const [website, branding] = await retryTransientDatabaseDnsFailure(() =>
+      Promise.all([
+        prisma.websiteContent.findUnique({
+          where: { singletonKey: "default" },
+          include: {
+            heroImages: {
+              orderBy: { displayOrder: "asc" },
+            },
+          },
+        }),
+        prisma.brandingSettings.findUnique({
+          where: { singletonKey: "default" },
+        }),
+      ]),
+    );
+
+    return buildReservationSiteConfig({ branding, hotel, website });
+  },
+);

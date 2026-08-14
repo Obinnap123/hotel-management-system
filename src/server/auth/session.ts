@@ -1,10 +1,12 @@
 import { cookies } from "next/headers";
+import { UserStatus } from "@prisma/client";
 import {
   createSessionToken,
   sessionCookieName,
   type SessionPayload,
   verifySessionToken,
 } from "@/lib/auth/session-token";
+import { prisma } from "@/server/db/prisma";
 
 const sessionDurationMs = 1000 * 60 * 60 * 8;
 
@@ -36,6 +38,43 @@ export async function getCurrentSession() {
   }
 
   return verifySessionToken(token, getAuthSecret());
+}
+
+export async function getCurrentActiveSession() {
+  const session = await getCurrentSession();
+
+  if (!session) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.userId,
+    },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      status: true,
+      sessionVersion: true,
+    },
+  });
+
+  if (
+    !user ||
+    user.status !== UserStatus.ACTIVE ||
+    user.sessionVersion !== session.sessionVersion
+  ) {
+    return null;
+  }
+
+  return {
+    ...session,
+    fullName: user.fullName,
+    email: user.email,
+    role: user.role,
+  };
 }
 
 export async function clearSessionCookie() {

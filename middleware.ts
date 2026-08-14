@@ -32,10 +32,6 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(sessionCookieName)?.value;
   const session = token && secret ? await verifySessionToken(token, secret) : null;
 
-  if (pathname === "/login" && session) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
   if (!isProtectedPath(pathname)) {
     return NextResponse.next();
   }

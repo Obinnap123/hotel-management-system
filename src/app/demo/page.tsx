@@ -6,29 +6,32 @@ import { PublicHero } from "@/components/public/PublicHero";
 import { RoomTypeCard } from "@/components/public/RoomTypeCard";
 import { Testimonials } from "@/components/public/Testimonials";
 import { getFeaturedPublicRoomTypes } from "@/features/public-room-types/queries";
-import { getHotelSettings } from "@/features/settings/queries";
+import { getReservationSiteConfig } from "@/features/settings/queries";
 import { publicReservationPath } from "@/lib/public/routes";
 
 export const dynamic = "force-dynamic";
 
 export default async function PublicHomePage() {
-  const [featuredRoomTypes, settings] = await Promise.all([
+  const [featuredRoomTypes, config] = await Promise.all([
     getFeaturedPublicRoomTypes(),
-    getHotelSettings(),
+    getReservationSiteConfig(),
   ]);
 
   return (
     <div>
-      <PublicHero heroImages={settings.heroImages} hotelName={settings.hotelName} />
+      <PublicHero
+        heroImages={config.website.heroImages.map((image) => image.url)}
+        hotelName={config.hotel.name}
+      />
 
-      <section className="reservation-container reservation-section pt-[13rem]! sm:pt-40! lg:pt-28!" id="featured-stays">
+      <section className="reservation-container reservation-section" id="featured-stays">
         <MotionReveal>
-          <div className="grid gap-7 border-b border-[#d9d3c8] pb-8 md:grid-cols-[1fr_.65fr] md:items-end">
+          <div className="grid gap-7 md:grid-cols-[1fr_.65fr] md:items-end">
             <div>
               <p className="reservation-kicker">Featured stays</p>
               <h2 className="reservation-heading mt-4">Rooms, considered for the way you travel.</h2>
             </div>
-            <p className="max-w-lg text-sm leading-7 text-[#66716c] md:justify-self-end">Each room category pairs practical comfort with a calm sense of place. Availability is live, so what you see is ready to reserve.</p>
+            <p className="max-w-lg text-sm leading-7 text-[#66716c] md:justify-self-end">Each room category pairs practical comfort with a calm sense of place. Availability is confirmed against your stay dates when you reserve.</p>
             <Link
               className="text-xs font-bold uppercase tracking-[0.14em] text-[#173b32] underline decoration-[#b58d55] underline-offset-8 md:col-start-2 md:justify-self-end"
               href={publicReservationPath("/rooms")}
@@ -39,9 +42,14 @@ export default async function PublicHomePage() {
         </MotionReveal>
 
         {featuredRoomTypes.length > 0 ? (
-          <div className="mt-10 grid gap-x-6 gap-y-10 md:grid-cols-3">
+          <div className="mt-10 grid auto-rows-fr gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {featuredRoomTypes.map((roomType) => (
-              <RoomTypeCard compact key={roomType.slug} roomType={roomType} />
+              <RoomTypeCard
+                compact
+                currency={config.hotel.currency}
+                key={roomType.slug}
+                roomType={roomType}
+              />
             ))}
           </div>
         ) : (
@@ -58,7 +66,7 @@ export default async function PublicHomePage() {
       </section>
 
       <HomeAmenities />
-      <AboutHotel hotelName={settings.hotelName} />
+      <AboutHotel hotelName={config.hotel.name} />
       <Testimonials />
     </div>
   );

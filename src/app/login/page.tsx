@@ -1,20 +1,26 @@
 import { redirect } from "next/navigation";
-import { getCurrentSession } from "@/server/auth/session";
+import { getCurrentActiveSession } from "@/server/auth/session";
 import { LoginForm } from "./LoginForm";
 
 type LoginPageProps = {
   searchParams?: Promise<{
     error?: string;
+    success?: string;
   }>;
 };
 
 const errorMessages = {
   invalid: "We could not sign you in. Please check your email and password.",
   missing: "Email and password are required.",
+  locked: "Too many unsuccessful attempts. Please wait 15 minutes and try again.",
+} as const;
+
+const successMessages = {
+  "password-changed": "Your password was changed. Sign in again to continue.",
 } as const;
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const session = await getCurrentSession();
+  const session = await getCurrentActiveSession();
 
   if (session) {
     redirect("/dashboard");
@@ -25,6 +31,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const message =
     error && error in errorMessages
       ? errorMessages[error as keyof typeof errorMessages]
+      : null;
+  const success = params?.success;
+  const successMessage =
+    success && success in successMessages
+      ? successMessages[success as keyof typeof successMessages]
       : null;
 
   return (
@@ -43,8 +54,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
 
         {message ? (
-          <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
             {message}
+          </p>
+        ) : null}
+
+        {successMessage ? (
+          <p className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+            {successMessage}
           </p>
         ) : null}
 

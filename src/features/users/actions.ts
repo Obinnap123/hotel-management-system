@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { clearSessionCookie } from "@/server/auth/session";
 import { requireAdmin, requireAuthenticatedStaff } from "@/features/rooms/authorization";
 import {
   activateStaffUser,
@@ -169,7 +170,8 @@ export async function changeOwnPasswordAction(
     );
   }
 
-  return success("Password changed successfully.");
+  await clearSessionCookie();
+  redirect("/login?success=password-changed");
 }
 
 function success(message: string): UserActionState {

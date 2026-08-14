@@ -18,12 +18,12 @@ export function RoomGallery({ coverImage, galleryImages, roomName }: RoomGallery
       <div className="group relative overflow-hidden bg-[#dfe5e0]">
         <AnimatePresence mode="wait">
           <motion.div animate={{ opacity: 1 }} className="relative aspect-[4/3] sm:aspect-[16/11] lg:aspect-[4/5]" exit={{ opacity: 0 }} initial={{ opacity: 0 }} key={activeImage} transition={{ duration: 0.3 }}>
-            <Image alt={`${roomName} room view ${activeIndex + 1}`} className="object-cover" fill priority sizes="(max-width: 1023px) 100vw, 55vw" src={activeImage} unoptimized={activeImage.includes("res.cloudinary.com")} />
+            <Image alt={`${roomName} room view ${activeIndex + 1}`} className="object-cover" fill loading="eager" priority sizes="(max-width: 1023px) 100vw, 55vw" src={activeImage} unoptimized={activeImage.includes("res.cloudinary.com")} />
           </motion.div>
         </AnimatePresence>
         {hasMultipleImages ? <><GalleryButton direction="previous" onClick={() => setActiveIndex((current) => current === 0 ? images.length - 1 : current - 1)} /><GalleryButton direction="next" onClick={() => setActiveIndex((current) => current === images.length - 1 ? 0 : current + 1)} /><p className="absolute bottom-4 right-4 bg-[#173b32] px-3 py-2 text-[0.65rem] font-semibold tracking-[0.12em] text-white">{String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</p></> : null}
       </div>
-      {hasMultipleImages ? <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5">{images.map((image, index) => <button aria-label={`Show ${roomName} image ${index + 1}`} aria-pressed={index === activeIndex} className={`relative aspect-[4/3] overflow-hidden border-2 ${index === activeIndex ? "border-[#a67c45]" : "border-transparent opacity-68 hover:opacity-100"}`} key={`${image}-${index}`} onClick={() => setActiveIndex(index)} type="button"><Image alt="" className="object-cover" fill sizes="160px" src={image} unoptimized={image.includes("res.cloudinary.com")} /></button>)}</div> : null}
+      {hasMultipleImages ? <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5">{images.map((image, index) => <button aria-label={`Show ${roomName} image ${index + 1}`} aria-pressed={index === activeIndex} className={`relative aspect-[4/3] overflow-hidden border-2 ${index === activeIndex ? "border-[#a67c45]" : "border-transparent opacity-68 hover:opacity-100"}`} key={`${image}-${index}`} onClick={() => setActiveIndex(index)} type="button"><Image alt="" className="object-cover" fill loading={index === 0 ? "eager" : "lazy"} sizes="160px" src={image} unoptimized={image.includes("res.cloudinary.com")} /></button>)}</div> : null}
     </div>
   );
 }

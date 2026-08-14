@@ -7,9 +7,14 @@ import {
   uploadHotelImage,
 } from "@/lib/cloudinary/upload";
 import { prisma } from "@/server/db/prisma";
-import { settingsFormSchema } from "./validation";
+import {
+  hotelProfileSettingsSchema,
+  reservationWebsiteSettingsSchema,
+} from "./validation";
 
 const settingsPath = "/dashboard/settings";
+const hotelProfilePath = `${settingsPath}/hotel-profile`;
+const reservationWebsitePath = `${settingsPath}/reservation-website`;
 const heroImageFolder = "hotel-management-system/reservation-hero";
 const maximumHeroImages = 4;
 
@@ -19,17 +24,62 @@ export type SettingsActionState = {
   submissionId: string;
 };
 
-export async function updateSettingsAction(
+export async function updateHotelProfileSettingsAction(
   _state: SettingsActionState,
   formData: FormData,
 ): Promise<SettingsActionState> {
   await requireAdmin();
 
-  const parsed = settingsFormSchema.safeParse(Object.fromEntries(formData));
+  const parsed = hotelProfileSettingsSchema.safeParse(
+    Object.fromEntries(formData),
+  );
 
   if (!parsed.success) {
     return failure(
       parsed.error.issues[0]?.message ?? "Invalid settings details.",
+    );
+  }
+
+  try {
+    await prisma.hotelSettings.upsert({
+      where: {
+        singletonKey: "default",
+      },
+      update: parsed.data,
+      create: {
+        singletonKey: "default",
+        ...parsed.data,
+      },
+    });
+  } catch (error) {
+    return failure(
+      error instanceof Error
+        ? error.message
+        : "Unable to update the hotel profile.",
+    );
+  }
+
+  revalidatePath(settingsPath);
+  revalidatePath(hotelProfilePath);
+  revalidatePath("/dashboard", "layout");
+  revalidatePath("/demo", "layout");
+  revalidatePath("/");
+  return success("Hotel profile updated.");
+}
+
+export async function updateReservationWebsiteSettingsAction(
+  _state: SettingsActionState,
+  formData: FormData,
+): Promise<SettingsActionState> {
+  await requireAdmin();
+
+  const parsed = reservationWebsiteSettingsSchema.safeParse(
+    Object.fromEntries(formData),
+  );
+
+  if (!parsed.success) {
+    return failure(
+      parsed.error.issues[0]?.message ?? "Invalid website settings.",
     );
   }
 
@@ -42,21 +92,49 @@ export async function updateSettingsAction(
     });
     const heroMedia = await resolveHeroMedia(formData, uploadedPublicIds);
 
-    await prisma.hotelSettings.upsert({
-      where: {
-        singletonKey: "default",
-      },
-      update: {
-        ...parsed.data,
-        heroImages: heroMedia.urls,
-        heroImagePublicIds: heroMedia.publicIds,
-      },
-      create: {
-        singletonKey: "default",
-        ...parsed.data,
-        heroImages: heroMedia.urls,
-        heroImagePublicIds: heroMedia.publicIds,
-      },
+    await prisma.$transaction(async (transaction) => {
+      const websiteContent = await transaction.websiteContent.upsert({
+        where: {
+          singletonKey: "default",
+        },
+        update: parsed.data,
+        create: {
+          singletonKey: "default",
+          ...parsed.data,
+        },
+      });
+
+      await transaction.websiteHeroImage.deleteMany({
+        where: { websiteContentId: websiteContent.id },
+      });
+
+      if (heroMedia.urls.length > 0) {
+        await transaction.websiteHeroImage.createMany({
+          data: heroMedia.urls.map((imageUrl, displayOrder) => ({
+            imageUrl,
+            storagePublicId: heroMedia.publicIds[displayOrder] || null,
+            displayOrder,
+            websiteContentId: websiteContent.id,
+          })),
+        });
+      }
+
+      await transaction.hotelSettings.upsert({
+        where: {
+          singletonKey: "default",
+        },
+        update: {
+          ...parsed.data,
+          heroImages: heroMedia.urls,
+          heroImagePublicIds: heroMedia.publicIds,
+        },
+        create: {
+          singletonKey: "default",
+          ...parsed.data,
+          heroImages: heroMedia.urls,
+          heroImagePublicIds: heroMedia.publicIds,
+        },
+      });
     });
 
     const nextPublicIds = new Set(heroMedia.publicIds.filter(Boolean));
@@ -70,15 +148,17 @@ export async function updateSettingsAction(
       uploadedPublicIds.map((publicId) => deleteHotelImage(publicId)),
     );
     return failure(
-      error instanceof Error ? error.message : "Unable to update settings.",
+      error instanceof Error
+        ? error.message
+        : "Unable to update the reservation website.",
     );
   }
 
   revalidatePath(settingsPath);
-  revalidatePath("/dashboard", "layout");
+  revalidatePath(reservationWebsitePath);
   revalidatePath("/demo", "layout");
   revalidatePath("/");
-  return success("Settings updated.");
+  return success("Reservation website updated.");
 }
 
 async function resolveHeroMedia(

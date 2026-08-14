@@ -25,9 +25,51 @@ export async function getDashboardOverview() {
     recentPayments,
   ] = await Promise.all([
     prisma.room.count(),
-    prisma.room.count({ where: { status: RoomStatus.AVAILABLE } }),
+    prisma.room.count({
+      where: {
+        status: {
+          in: [RoomStatus.AVAILABLE, RoomStatus.RESERVED],
+        },
+        bookings: {
+          none: {
+            status: {
+              in: [
+                BookingStatus.PENDING,
+                BookingStatus.CONFIRMED,
+                BookingStatus.CHECKED_IN,
+              ],
+            },
+            checkInDate: {
+              lt: tomorrowStart,
+            },
+            checkOutDate: {
+              gt: todayStart,
+            },
+          },
+        },
+      },
+    }),
     prisma.room.count({ where: { status: RoomStatus.OCCUPIED } }),
-    prisma.room.count({ where: { status: RoomStatus.RESERVED } }),
+    prisma.room.count({
+      where: {
+        status: {
+          not: RoomStatus.MAINTENANCE,
+        },
+        bookings: {
+          some: {
+            status: {
+              in: [BookingStatus.PENDING, BookingStatus.CONFIRMED],
+            },
+            checkInDate: {
+              lt: tomorrowStart,
+            },
+            checkOutDate: {
+              gt: todayStart,
+            },
+          },
+        },
+      },
+    }),
     prisma.room.count({ where: { status: RoomStatus.MAINTENANCE } }),
     prisma.guest.count(),
     prisma.booking.count({

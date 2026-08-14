@@ -36,6 +36,9 @@ export async function updateStaffUser(userId: string, input: UpdateUserInput) {
       email: input.email,
       role: input.role,
       status: input.status,
+      sessionVersion: {
+        increment: 1,
+      },
     },
   });
 }
@@ -45,6 +48,9 @@ export async function activateStaffUser(userId: string) {
     where: { id: userId },
     data: {
       status: UserStatus.ACTIVE,
+      sessionVersion: {
+        increment: 1,
+      },
     },
   });
 }
@@ -54,6 +60,9 @@ export async function deactivateStaffUser(userId: string) {
     where: { id: userId },
     data: {
       status: UserStatus.INACTIVE,
+      sessionVersion: {
+        increment: 1,
+      },
     },
   });
 }
@@ -66,6 +75,9 @@ export async function resetStaffPassword(userId: string) {
     where: { id: userId },
     data: {
       passwordHash,
+      sessionVersion: {
+        increment: 1,
+      },
     },
   });
 
@@ -99,6 +111,9 @@ export async function changeOwnPassword(
     where: { id: userId },
     data: {
       passwordHash,
+      sessionVersion: {
+        increment: 1,
+      },
     },
   });
 }

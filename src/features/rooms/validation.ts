@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { roomStatusValues } from "@/lib/domain/hms-enums";
+import { roomOperationalStatusValues } from "@/lib/domain/hms-enums";
 
 export const roomFormSchema = z.object({
   roomNumber: z.string().trim().min(1, "Room number is required."),
@@ -11,14 +11,14 @@ export const roomFormSchema = z.object({
     .number({ error: "Capacity is required." })
     .int("Capacity must be a whole number.")
     .min(1, "Capacity must be at least 1."),
-  status: z.enum(roomStatusValues, {
+  status: z.enum(roomOperationalStatusValues, {
     error: "Select a valid room status.",
   }),
 });
 
 export const roomStatusFormSchema = z.object({
   roomId: z.string().trim().min(1, "Room is required."),
-  status: z.enum(roomStatusValues, {
+  status: z.enum(roomOperationalStatusValues, {
     error: "Select a valid room status.",
   }),
 });

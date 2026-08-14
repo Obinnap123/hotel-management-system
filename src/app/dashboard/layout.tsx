@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { canAccessPath } from "@/lib/auth/permissions";
-import { getCurrentSession } from "@/server/auth/session";
+import { getCurrentActiveSession } from "@/server/auth/session";
 import { getHotelSettings } from "@/features/settings/queries";
 
 const navigationItems = [
@@ -35,7 +35,7 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getCurrentSession();
+  const session = await getCurrentActiveSession();
 
   if (!session) {
     redirect("/login");

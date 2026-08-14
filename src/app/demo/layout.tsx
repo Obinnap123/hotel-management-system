@@ -1,29 +1,22 @@
 import type { Metadata } from "next";
 import { PublicFooter } from "@/components/public/PublicFooter";
 import { PublicNavbar } from "@/components/public/PublicNavbar";
-import { getHotelSettings } from "@/features/settings/queries";
+import { getReservationSiteConfig } from "@/features/settings/queries";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getHotelSettings();
-  const hotelName = settings.hotelName.trim() || "Our Hotel";
-  const title =
-    settings.websiteTitle.trim() ||
-    `${hotelName} | Official Website & Reservations`;
-  const description =
-    settings.websiteDescription.trim() ||
-    `Explore rooms, check availability, and book your stay directly with ${hotelName}.`;
+  const config = await getReservationSiteConfig();
 
   return {
     title: {
-      absolute: title,
+      absolute: config.website.title,
     },
-    description,
+    description: config.website.description,
     openGraph: {
-      title,
-      description,
-      siteName: hotelName,
+      title: config.website.title,
+      description: config.website.description,
+      siteName: config.hotel.name,
       type: "website",
     },
   };
@@ -34,17 +27,17 @@ export default async function PublicLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = await getHotelSettings();
+  const config = await getReservationSiteConfig();
 
   return (
     <div className="reservation-theme min-h-screen">
-      <PublicNavbar hotelName={settings.hotelName} />
+      <PublicNavbar hotelName={config.hotel.name} />
       <main>{children}</main>
       <PublicFooter
-        emailAddress={settings.emailAddress}
-        hotelName={settings.hotelName}
-        phoneNumber={settings.phoneNumber}
-        physicalAddress={settings.physicalAddress}
+        emailAddress={config.hotel.emailAddress}
+        hotelName={config.hotel.name}
+        phoneNumber={config.hotel.phoneNumber}
+        physicalAddress={config.hotel.physicalAddress}
       />
     </div>
   );

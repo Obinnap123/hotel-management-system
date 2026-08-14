@@ -8,13 +8,6 @@ export async function manuallyUpdateRoomStatusForMvp(
   return updateRoomStatus(roomId, status);
 }
 
-export async function markRoomReserved(
-  roomId: string,
-  db: RoomStatusClient = prisma,
-) {
-  return updateRoomStatus(roomId, RoomStatus.RESERVED, db);
-}
-
 export async function markRoomOccupied(
   roomId: string,
   db: RoomStatusClient = prisma,

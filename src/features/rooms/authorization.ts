@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { getCurrentSession } from "@/server/auth/session";
+import { getCurrentActiveSession } from "@/server/auth/session";
 
 export async function requireAuthenticatedStaff() {
-  const session = await getCurrentSession();
+  const session = await getCurrentActiveSession();
 
   if (!session) {
     redirect("/login");
