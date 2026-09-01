@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   buildReservationSiteConfig,
   defaultReservationBranding,
+  defaultReservationAboutImage,
   defaultReservationHeroImages,
 } from "./reservation-site-config";
 
@@ -32,6 +33,40 @@ describe("reservation-site configuration", () => {
       "Old George HA | Official Website & Reservations",
     );
     assert.match(config.website.description, /Old George HA/);
+    assert.equal(config.website.configuredCopy.heroHeading, "");
+    assert.equal(
+      config.website.copy.heroEyebrow,
+      "Welcome to Old George HA",
+    );
+    assert.equal(
+      config.website.copy.aboutBodyPrimary.startsWith("Old George HA"),
+      true,
+    );
+  });
+
+  it("uses configured website wording without changing blank fallback fields", () => {
+    const config = buildReservationSiteConfig({
+      branding: null,
+      hotel,
+      website: {
+        websiteTitle: "",
+        websiteDescription: "",
+        heroHeading: "Welcome to a quieter stay.",
+        footerCtaLabel: "Book with us",
+        updatedAt: new Date("2026-08-13T13:00:00Z"),
+        heroImages: [],
+      },
+    });
+
+    assert.equal(
+      config.website.copy.heroHeading,
+      "Welcome to a quieter stay.",
+    );
+    assert.equal(config.website.copy.footerCtaLabel, "Book with us");
+    assert.equal(
+      config.website.copy.featuredHeading,
+      "Rooms, considered for the way you travel.",
+    );
   });
 
   it("uses safe visual defaults when branding and custom images are absent", () => {
@@ -54,6 +89,42 @@ describe("reservation-site configuration", () => {
       config.branding.accentColor,
       defaultReservationBranding.accentColor,
     );
+    assert.equal(config.website.facilities.length, 6);
+    assert.equal(config.website.aboutImage.url, defaultReservationAboutImage);
+    assert.equal(config.website.aboutImage.isDefault, true);
+  });
+
+  it("returns configured facilities and About Hotel media", () => {
+    const config = buildReservationSiteConfig({
+      branding: null,
+      hotel,
+      website: {
+        websiteTitle: "",
+        websiteDescription: "",
+        updatedAt: new Date("2026-08-13T13:00:00Z"),
+        heroImages: [],
+        facilities: [
+          {
+            id: "pool",
+            title: "Swimming pool",
+            description: "Open daily for registered guests",
+            iconKey: "POOL",
+            displayOrder: 0,
+          },
+        ],
+        aboutImageUrl: "https://example.com/about.jpg",
+        aboutImagePublicId: "reservation-about/about",
+        aboutImageAlt: "The hotel swimming pool at sunset",
+      },
+    });
+
+    assert.equal(config.website.facilities[0]?.iconKey, "POOL");
+    assert.equal(config.website.aboutImage.url, "https://example.com/about.jpg");
+    assert.equal(
+      config.website.aboutImage.storageId,
+      "reservation-about/about",
+    );
+    assert.equal(config.website.aboutImage.isDefault, false);
   });
 
   it("returns custom hero images in display order with their storage IDs", () => {
@@ -92,5 +163,29 @@ describe("reservation-site configuration", () => {
       ["hotel/first", "hotel/second"],
     );
     assert.equal(config.website.heroImages[0]?.isDefault, false);
+  });
+
+  it("returns main, light, and favicon branding assets", () => {
+    const config = buildReservationSiteConfig({
+      branding: {
+        logoUrl: "https://example.com/logo.png",
+        logoPublicId: "branding/logo",
+        lightLogoUrl: "https://example.com/logo-light.png",
+        lightLogoPublicId: "branding/logo-light",
+        faviconUrl: "https://example.com/favicon.png",
+        faviconPublicId: "branding/favicon",
+        primaryColor: "#173B32",
+        accentColor: "#E5D2A9",
+        typographyPreset: "EDITORIAL",
+        colorScheme: "LIGHT",
+      },
+      hotel,
+      website: null,
+    });
+
+    assert.equal(config.branding.logoStorageId, "branding/logo");
+    assert.equal(config.branding.lightLogoUrl, "https://example.com/logo-light.png");
+    assert.equal(config.branding.lightLogoStorageId, "branding/logo-light");
+    assert.equal(config.branding.faviconStorageId, "branding/favicon");
   });
 });

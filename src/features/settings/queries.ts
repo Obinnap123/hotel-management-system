@@ -46,6 +46,9 @@ export const getReservationSiteConfig = cache(
             heroImages: {
               orderBy: { displayOrder: "asc" },
             },
+            facilities: {
+              orderBy: { displayOrder: "asc" },
+            },
           },
         }),
         prisma.brandingSettings.findUnique({

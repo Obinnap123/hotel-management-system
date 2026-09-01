@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { assertAdminRole } from "@/lib/auth/permissions";
 import { getCurrentActiveSession } from "@/server/auth/session";
 
 export async function requireAuthenticatedStaff() {
@@ -13,10 +14,7 @@ export async function requireAuthenticatedStaff() {
 
 export async function requireAdmin() {
   const session = await requireAuthenticatedStaff();
-
-  if (session.role !== "ADMIN") {
-    throw new Error("You do not have permission to perform this action.");
-  }
+  assertAdminRole(session.role);
 
   return session;
 }

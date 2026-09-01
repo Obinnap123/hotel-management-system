@@ -5,6 +5,7 @@ import {
   Clock3,
   Globe2,
   Images,
+  Palette,
   type LucideIcon,
 } from "lucide-react";
 import { SettingsPageHeader } from "./SettingsPageHeader";
@@ -12,6 +13,7 @@ import { SettingsPageHeader } from "./SettingsPageHeader";
 type SettingsOverviewProps = {
   currency: string;
   heroImageCount: number;
+  hasCustomLogo: boolean;
   hotelName: string;
   websiteTitle: string;
 };
@@ -19,6 +21,7 @@ type SettingsOverviewProps = {
 export function SettingsOverview({
   currency,
   heroImageCount,
+  hasCustomLogo,
   hotelName,
   websiteTitle,
 }: SettingsOverviewProps) {
@@ -46,6 +49,18 @@ export function SettingsOverview({
         </div>
 
         <div className="divide-y divide-slate-200">
+          <SettingsLink
+            description="Hotel logos, browser icon, colours, typography, and appearance used across the reservation website."
+            href="/dashboard/settings/branding"
+            icon={Palette}
+            meta={
+              <span className="inline-flex items-center gap-1.5">
+                <Images aria-hidden="true" className="h-3.5 w-3.5" />
+                {hasCustomLogo ? "Custom logo configured" : "Hotel-name fallback active"}
+              </span>
+            }
+            title="Branding"
+          />
           <SettingsLink
             description="Hotel identity, contact information, currency, and default arrival and departure times."
             href="/dashboard/settings/hotel-profile"
@@ -90,8 +105,8 @@ export function SettingsOverview({
       </section>
 
       <p className="max-w-3xl text-sm leading-6 text-slate-500">
-        Branding, booking rules, policies, and notifications will appear here as
-        their controls are introduced in the next product steps.
+        Booking rules, policies, and notifications will appear here as their
+        controls are introduced in the next product steps.
       </p>
     </div>
   );

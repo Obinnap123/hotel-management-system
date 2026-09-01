@@ -21,6 +21,10 @@ export const metadata: Metadata = {
     title: "SymplyUp Hotel Suite",
     type: "website",
   },
+  icons: {
+    icon: [{ url: "/symplyup-favicon.ico" }],
+    shortcut: [{ url: "/symplyup-favicon.ico" }],
+  },
 };
 
 export const viewport: Viewport = {

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const sections = [
   { href: "/dashboard/settings/hotel-profile", label: "Hotel profile" },
+  { href: "/dashboard/settings/branding", label: "Branding" },
   {
     href: "/dashboard/settings/reservation-website",
     label: "Reservation website",

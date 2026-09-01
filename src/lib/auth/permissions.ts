@@ -26,6 +26,12 @@ export function canAccessPath(role: AppRole, pathname: string) {
   return !isAdminOnlyPath(pathname);
 }
 
+export function assertAdminRole(role: AppRole | string) {
+  if (role !== "ADMIN") {
+    throw new Error("You do not have permission to perform this action.");
+  }
+}
+
 function matchesPath(pathname: string, path: string) {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
