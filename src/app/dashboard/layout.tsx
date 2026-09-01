@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { HotelLogo } from "@/components/branding/HotelLogo";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { canAccessPath } from "@/lib/auth/permissions";
 import { getCurrentActiveSession } from "@/server/auth/session";
-import { getHotelSettings } from "@/features/settings/queries";
+import { getReservationSiteConfig } from "@/features/settings/queries";
 
 const navigationItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -20,13 +21,18 @@ const navigationItems = [
 ] as const;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getHotelSettings();
-  const hotelName = settings.hotelName.trim() || "Hotel Management";
+  const config = await getReservationSiteConfig();
 
   return {
     title: {
-      absolute: `${hotelName} | HMS`,
+      absolute: `${config.hotel.name} | HMS`,
     },
+    icons: config.branding.faviconUrl
+      ? {
+          icon: [{ url: config.branding.faviconUrl }],
+          shortcut: [{ url: config.branding.faviconUrl }],
+        }
+      : undefined,
   };
 }
 
@@ -41,7 +47,7 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const settings = await getHotelSettings();
+  const config = await getReservationSiteConfig();
   const visibleNavigationItems = navigationItems.filter((item) =>
     canAccessPath(session.role, item.href),
   );
@@ -49,12 +55,27 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen max-w-full overflow-x-hidden bg-[var(--app-bg)] text-slate-950">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-[var(--border)] bg-white/95 px-4 py-5 shadow-sm xl:block">
-        <div className="mb-8 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            HMS
-          </p>
-          <h1 className="mt-1 break-words text-lg font-semibold tracking-tight text-slate-950">
-            {settings.hotelName}
+        <div className="mb-8 flex min-w-0 flex-col items-center text-center">
+          {config.branding.logoUrl ? (
+            <HotelLogo
+              alt={`${config.hotel.name} logo`}
+              className="h-14 w-full max-w-48"
+              position="center"
+              priority
+              sizes="192px"
+              url={config.branding.logoUrl}
+            />
+          ) : (
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              HMS
+            </p>
+          )}
+          <h1
+            className={`${
+              config.branding.logoUrl ? "mt-2 text-base" : "mt-1 text-lg"
+            } break-words text-center font-semibold tracking-tight text-slate-950`}
+          >
+            {config.hotel.name}
           </h1>
         </div>
 
@@ -74,13 +95,24 @@ export default async function DashboardLayout({
       <div className="min-w-0 max-w-full overflow-x-hidden xl:pl-64">
         <header className="border-b border-[var(--border)] bg-white/95 px-4 py-4 shadow-sm sm:px-6">
           <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                Signed in as
-              </p>
-              <p className="break-words font-medium text-slate-950">
-                {session.fullName} ({session.role})
-              </p>
+            <div className="flex min-w-0 items-center gap-3">
+              {config.branding.logoUrl ? (
+                <HotelLogo
+                  alt={`${config.hotel.name} logo`}
+                  className="h-10 w-20 sm:w-28 xl:hidden"
+                  priority
+                  sizes="(max-width: 639px) 80px, 112px"
+                  url={config.branding.logoUrl}
+                />
+              ) : null}
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Signed in as
+                </p>
+                <p className="break-words font-medium text-slate-950">
+                  {session.fullName} ({session.role})
+                </p>
+              </div>
             </div>
 
             <AccountMenu

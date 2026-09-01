@@ -11,6 +11,7 @@ export default async function SettingsPage() {
     <SettingsOverview
       currency={config.hotel.currency}
       heroImageCount={config.website.customHeroImages.length}
+      hasCustomLogo={Boolean(config.branding.logoUrl)}
       hotelName={config.hotel.name}
       websiteTitle={config.website.configuredTitle}
     />

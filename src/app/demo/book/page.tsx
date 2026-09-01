@@ -17,10 +17,10 @@ export default async function PublicBookPage({ searchParams }: Props) {
 
   return (
     <section className="reservation-container reservation-section py-10! sm:py-16!">
-      <Link className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-[#53605b] hover:text-[#173b32]" href={publicReservationPath("/rooms")}><ArrowLeft aria-hidden="true" className="h-4 w-4" /> Browse rooms</Link>
+      <Link className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-[var(--reservation-muted)] hover:text-[var(--reservation-primary)]" href={publicReservationPath("/rooms")}><ArrowLeft aria-hidden="true" className="h-4 w-4" /> Browse rooms</Link>
       <div className="mt-8 grid gap-10 lg:grid-cols-[.72fr_1.28fr] lg:gap-16">
-        <aside className="order-2 bg-[#173b32] p-7 text-white sm:p-10 lg:order-1 lg:sticky lg:top-28 lg:self-start">
-          <p className="reservation-kicker text-[#e3ce9f]!">Direct reservation</p>
+        <aside className="order-2 bg-[var(--reservation-primary)] p-7 text-[var(--reservation-on-primary)] sm:p-10 lg:order-1 lg:sticky lg:top-28 lg:self-start">
+          <p className="reservation-kicker reservation-kicker-on-primary">Direct reservation</p>
           <h1 className="mt-5 font-serif text-4xl leading-[1.02] tracking-[-0.03em] sm:text-5xl">Your stay at {config.hotel.name}.</h1>
           <p className="mt-6 text-sm leading-7 text-white/65">Share your preferred room and dates. The request enters the hotel’s live reservation system for reception to prepare your stay.</p>
           <ul className="mt-9 border-t border-white/15">
@@ -30,10 +30,10 @@ export default async function PublicBookPage({ searchParams }: Props) {
           </ul>
           {(config.hotel.phoneNumber || config.hotel.emailAddress) ? <div className="mt-8 border-t border-white/15 pt-6 text-xs leading-6 text-white/50"><p>Need help before reserving?</p>{config.hotel.phoneNumber ? <a className="mt-1 block text-white/80 hover:text-white" href={`tel:${config.hotel.phoneNumber}`}>{config.hotel.phoneNumber}</a> : null}{config.hotel.emailAddress ? <a className="block break-all text-white/80 hover:text-white" href={`mailto:${config.hotel.emailAddress}`}>{config.hotel.emailAddress}</a> : null}</div> : null}
         </aside>
-        <div className="order-1 bg-[#fbfaf6] p-6 sm:p-10 lg:order-2 lg:p-12">
+        <div className="order-1 bg-[var(--reservation-paper)] p-6 sm:p-10 lg:order-2 lg:p-12">
           <p className="reservation-kicker">Reservation details</p>
-          <h2 className="mt-4 font-serif text-4xl tracking-[-0.03em] text-[#22312d]">Plan your arrival.</h2>
-          <p className="mt-4 max-w-xl text-sm leading-7 text-[#66716c]">All fields are required unless marked optional. Your reservation goes directly to hotel reception.</p>
+          <h2 className="mt-4 font-serif text-4xl tracking-[-0.03em] text-[var(--reservation-ink)]">Plan your arrival.</h2>
+          <p className="mt-4 max-w-xl text-sm leading-7 text-[var(--reservation-muted)]">All fields are required unless marked optional. Your reservation goes directly to hotel reception.</p>
           <BookingForm defaultCheckInDate={params?.checkInDate} defaultCheckOutDate={params?.checkOutDate} defaultGuestCount={params?.guestCount} defaultRoomTypeSlug={params?.roomType} roomTypes={roomTypes} />
         </div>
       </div>
@@ -41,4 +41,4 @@ export default async function PublicBookPage({ searchParams }: Props) {
   );
 }
 
-function Assurance({ icon, text }: { icon: React.ReactNode; text: string }) { return <li className="flex gap-3 border-b border-white/15 py-5 text-sm leading-6 text-white/75"><span aria-hidden="true" className="mt-0.5 text-[#ddc796] [&>svg]:h-4 [&>svg]:w-4">{icon}</span>{text}</li>; }
+function Assurance({ icon, text }: { icon: React.ReactNode; text: string }) { return <li className="flex gap-3 border-b border-white/15 py-5 text-sm leading-6 text-white/75"><span aria-hidden="true" className="mt-0.5 text-[var(--reservation-accent-on-primary)] [&>svg]:h-4 [&>svg]:w-4">{icon}</span>{text}</li>; }

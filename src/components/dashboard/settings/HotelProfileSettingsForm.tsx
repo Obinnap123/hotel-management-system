@@ -2,12 +2,17 @@
 
 import { Save } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import {
   updateHotelProfileSettingsAction,
   type SettingsActionState,
 } from "@/features/settings/actions";
+import {
+  formatCurrencyPreview,
+  type CurrencyOption,
+} from "@/lib/currency";
+import { notifyReservationSiteUpdated } from "@/lib/public/site-refresh";
 import { SettingsField, settingsInputClass } from "./SettingsField";
 import { SettingsPageHeader } from "./SettingsPageHeader";
 import { SettingsSectionNav } from "./SettingsSectionNav";
@@ -20,11 +25,14 @@ const initialActionState: SettingsActionState = {
 };
 
 export function HotelProfileSettingsForm({
+  currencyOptions,
   settings,
 }: {
+  currencyOptions: CurrencyOption[];
   settings: HotelProfileSettingsValues;
 }) {
   const router = useRouter();
+  const [currency, setCurrency] = useState(settings.currency);
   const [state, formAction, pending] = useActionState(
     updateHotelProfileSettingsAction,
     initialActionState,
@@ -32,6 +40,7 @@ export function HotelProfileSettingsForm({
 
   useEffect(() => {
     if (!state.ok || !state.submissionId) return;
+    notifyReservationSiteUpdated();
     router.refresh();
   }, [router, state.ok, state.submissionId]);
 
@@ -121,18 +130,41 @@ export function HotelProfileSettingsForm({
               />
             </SettingsField>
             <SettingsField
-              hint="Use a three-letter code such as NGN, USD, or GBP."
+              hint="Choose by currency name or symbol. The standard code is stored automatically."
               label="Currency"
             >
-              <input
-                autoCapitalize="characters"
-                className={`${settingsInputClass} uppercase`}
-                defaultValue={settings.currency}
-                maxLength={3}
-                minLength={3}
+              <select
+                className={settingsInputClass}
                 name="currency"
+                onChange={(event) => setCurrency(event.target.value)}
                 required
-              />
+                value={currency}
+              >
+                <optgroup label="Common currencies">
+                  {currencyOptions
+                    .filter((option) => option.common)
+                    .map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {option.name} — {option.symbol} — {option.code}
+                      </option>
+                    ))}
+                </optgroup>
+                <optgroup label="All supported currencies">
+                  {currencyOptions
+                    .filter((option) => !option.common)
+                    .map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {option.name} — {option.symbol} — {option.code}
+                      </option>
+                    ))}
+                </optgroup>
+              </select>
+              <span
+                aria-live="polite"
+                className="mt-2 block rounded-md bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600"
+              >
+                Room-price preview: {formatCurrencyPreview(currency)}
+              </span>
             </SettingsField>
           </div>
         </SettingsPanel>

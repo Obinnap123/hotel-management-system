@@ -176,28 +176,57 @@ model HotelSettings {
 }
 
 model BrandingSettings {
-  id               String   @id @default(cuid())
-  singletonKey     String   @unique @default("default")
-  logoUrl          String?
-  logoPublicId     String?
-  faviconUrl       String?
-  faviconPublicId  String?
-  primaryColor     String   @default("#173B32")
-  accentColor      String   @default("#E5D2A9")
-  typographyPreset String   @default("EDITORIAL")
-  colorScheme      String   @default("LIGHT")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                String   @id @default(cuid())
+  singletonKey      String   @unique @default("default")
+  logoUrl           String?
+  logoPublicId      String?
+  lightLogoUrl      String?
+  lightLogoPublicId String?
+  faviconUrl        String?
+  faviconPublicId   String?
+  primaryColor      String   @default("#173B32")
+  accentColor       String   @default("#E5D2A9")
+  typographyPreset  String   @default("EDITORIAL")
+  colorScheme       String   @default("LIGHT")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model WebsiteContent {
-  id                 String             @id @default(cuid())
-  singletonKey       String             @unique @default("default")
-  websiteTitle       String             @default("")
-  websiteDescription String             @default("")
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  heroImages         WebsiteHeroImage[]
+  id                    String             @id @default(cuid())
+  singletonKey          String             @unique @default("default")
+  websiteTitle          String             @default("")
+  websiteDescription    String             @default("")
+  heroEyebrow           String             @default("")
+  heroHeading           String             @default("")
+  heroDescription       String             @default("")
+  heroPrimaryCtaLabel   String             @default("")
+  heroSecondaryCtaLabel String             @default("")
+  featuredEyebrow       String             @default("")
+  featuredHeading       String             @default("")
+  featuredDescription   String             @default("")
+  featuredCtaLabel      String             @default("")
+  amenitiesEyebrow      String             @default("")
+  amenitiesHeading      String             @default("")
+  amenitiesDescription  String             @default("")
+  aboutEyebrow          String             @default("")
+  aboutHeading          String             @default("")
+  aboutBodyPrimary      String             @default("")
+  aboutBodySecondary    String             @default("")
+  aboutImageCaption     String             @default("")
+  aboutImageUrl         String?
+  aboutImagePublicId    String?
+  aboutImageAlt         String             @default("")
+  roomsEyebrow          String             @default("")
+  roomsHeading          String             @default("")
+  roomsDescription      String             @default("")
+  footerEyebrow         String             @default("")
+  footerHeading         String             @default("")
+  footerCtaLabel        String             @default("")
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  heroImages            WebsiteHeroImage[]
+  facilities            WebsiteFacility[]
 }
 
 model WebsiteHeroImage {
@@ -208,6 +237,22 @@ model WebsiteHeroImage {
   alternativeText String   @default("")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  websiteContentId String
+  websiteContent   WebsiteContent @relation(fields: [websiteContentId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteContentId, displayOrder])
+  @@index([websiteContentId])
+}
+
+model WebsiteFacility {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  iconKey      String
+  displayOrder Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   websiteContentId String
   websiteContent   WebsiteContent @relation(fields: [websiteContentId], references: [id], onDelete: Cascade)

@@ -1,6 +1,7 @@
 import { HotelProfileSettingsForm } from "@/components/dashboard/settings/HotelProfileSettingsForm";
 import { requireAdmin } from "@/features/rooms/authorization";
 import { getHotelSettings } from "@/features/settings/queries";
+import { getCurrencyOptions } from "@/lib/currency";
 
 export default async function HotelProfileSettingsPage() {
   await requireAdmin();
@@ -8,6 +9,7 @@ export default async function HotelProfileSettingsPage() {
 
   return (
     <HotelProfileSettingsForm
+      currencyOptions={getCurrencyOptions(settings.currency)}
       settings={{
         hotelName: settings.hotelName,
         phoneNumber: settings.phoneNumber,
