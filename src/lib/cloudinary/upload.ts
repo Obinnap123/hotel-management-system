@@ -1,12 +1,31 @@
 import "server-only";
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
-
-const roomTypeFolder = "hotel-management-system/room-types";
+import {
+  ROOM_IMAGE_FOLDER,
+  ROOM_IMAGE_MAX_BYTES,
+} from "@/lib/cloudinary/room-images";
 
 let configured = false;
 
 export async function uploadRoomTypeImage(file: File) {
-  return uploadHotelImage(file, roomTypeFolder);
+  return uploadHotelImage(file, ROOM_IMAGE_FOLDER);
+}
+
+export function createRoomImageUploadSignature() {
+  const credentials = getCloudinaryCredentials();
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = cloudinary.utils.api_sign_request(
+    { folder: ROOM_IMAGE_FOLDER, timestamp },
+    credentials.apiSecret,
+  );
+
+  return {
+    apiKey: credentials.apiKey,
+    cloudName: credentials.cloudName,
+    folder: ROOM_IMAGE_FOLDER,
+    signature,
+    timestamp,
+  };
 }
 
 export async function uploadHotelImage(file: File, folder: string) {
@@ -71,6 +90,19 @@ function configureCloudinary() {
     return;
   }
 
+  const { apiKey, apiSecret, cloudName } = getCloudinaryCredentials();
+
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+    secure: true,
+  });
+
+  configured = true;
+}
+
+function getCloudinaryCredentials() {
   const cloudName =
     process.env.CLOUDINARY_CLOUD_NAME ??
     process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -83,14 +115,7 @@ function configureCloudinary() {
     );
   }
 
-  cloudinary.config({
-    cloud_name: cloudName,
-    api_key: apiKey,
-    api_secret: apiSecret,
-    secure: true,
-  });
-
-  configured = true;
+  return { apiKey, apiSecret, cloudName };
 }
 
 function uploadDataUri(dataUri: string, folder: string) {
@@ -157,9 +182,7 @@ function assertImageFile(file: File) {
     throw new Error("Only image uploads are allowed.");
   }
 
-  const maxSizeInBytes = 5 * 1024 * 1024;
-
-  if (file.size > maxSizeInBytes) {
+  if (file.size > ROOM_IMAGE_MAX_BYTES) {
     throw new Error("Image must be 5MB or smaller.");
   }
 }

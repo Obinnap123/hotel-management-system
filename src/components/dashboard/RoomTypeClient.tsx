@@ -14,11 +14,21 @@ import {
   useTransition,
 } from "react";
 import {
+  cleanupRoomImageUploadsAction,
+  createRoomImageUploadSignatureAction,
   createRoomTypeAction,
   deleteRoomTypeAction,
   updateRoomTypeAction,
   type ActionState,
 } from "@/features/rooms/actions";
+import {
+  uploadRoomImageDirect,
+  validateRoomImageFile,
+} from "@/lib/cloudinary/direct-room-upload";
+import {
+  ROOM_IMAGE_MAX_GALLERY_COUNT,
+  type UploadedRoomImage,
+} from "@/lib/cloudinary/room-images";
 import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import { Modal } from "@/components/ui/Modal";
 
@@ -244,6 +254,7 @@ function EditRoomTypeDialog({ roomType }: { roomType: RoomTypeTableItem }) {
 
 function RoomTypeForm({
   action,
+  pending,
   roomType,
   state,
   submitLabel,
@@ -271,10 +282,13 @@ function RoomTypeForm({
     SelectedGalleryImage[]
   >([]);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const selectedGalleryImagesRef = useRef<SelectedGalleryImage[]>([]);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     selectedGalleryImagesRef.current = selectedGalleryImages;
@@ -316,6 +330,17 @@ function RoomTypeForm({
     const files = Array.from(event.target.files ?? []);
 
     if (files.length === 0) {
+      return;
+    }
+
+    if (
+      galleryImages.length + selectedGalleryImages.length + files.length >
+      ROOM_IMAGE_MAX_GALLERY_COUNT
+    ) {
+      setValidationError(
+        `A room type can have up to ${ROOM_IMAGE_MAX_GALLERY_COUNT} gallery images.`,
+      );
+      event.target.value = "";
       return;
     }
 
@@ -372,9 +397,16 @@ function RoomTypeForm({
     });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (submittingRef.current) {
+      return;
+    }
+
+    submittingRef.current = true;
     setValidationError(null);
+    setUploadStatus(null);
 
     // Validate required fields
     const nameInput = formRef.current?.querySelector(
@@ -382,70 +414,123 @@ function RoomTypeForm({
     ) as HTMLInputElement;
     if (!nameInput?.value?.trim()) {
       setValidationError("Room type name is required.");
+      submittingRef.current = false;
       return;
     }
 
-    // Build FormData explicitly with all fields
-    const formData = new FormData();
+    const coverFile = coverInputRef.current?.files?.[0] ?? null;
+    const newFiles = [
+      ...(coverFile ? [coverFile] : []),
+      ...selectedGalleryImages.map((image) => image.file),
+    ];
+    let uploadedCover: UploadedRoomImage | null = null;
+    const uploadedGallery: UploadedRoomImage[] = [];
+    const uploadedPublicIds: string[] = [];
 
-    // Text fields
-    formData.append("name", nameInput.value);
-    const slugInput = formRef.current?.querySelector(
-      'input[name="slug"]',
-    ) as HTMLInputElement;
-    if (slugInput?.value) {
-      formData.append("slug", slugInput.value);
-    }
+    try {
+      setUploading(true);
 
-    const descriptionInput = formRef.current?.querySelector(
-      'textarea[name="description"]',
-    ) as HTMLTextAreaElement;
-    if (descriptionInput?.value) {
-      formData.append("description", descriptionInput.value);
-    }
+      for (const file of newFiles) {
+        await validateRoomImageFile(file);
+      }
 
-    const amenitiesInput = formRef.current?.querySelector(
-      'textarea[name="amenities"]',
-    ) as HTMLTextAreaElement;
-    if (amenitiesInput?.value) {
-      formData.append("amenities", amenitiesInput.value);
-    }
+      if (newFiles.length > 0) {
+        setUploadStatus("Preparing secure image upload…");
+        const signature = await createRoomImageUploadSignatureAction();
 
-    // Existing cover image
-    formData.append("existingCoverImage", coverImage ?? "");
-    if (coverImage) {
+        if (!signature.ok) {
+          throw new Error(signature.message);
+        }
+
+        if (coverFile) {
+          setUploadStatus("Uploading cover image…");
+          uploadedCover = await uploadRoomImageDirect(coverFile, signature);
+          uploadedPublicIds.push(uploadedCover.publicId);
+        }
+
+        for (const [index, image] of selectedGalleryImages.entries()) {
+          setUploadStatus(
+            `Uploading gallery image ${index + 1} of ${selectedGalleryImages.length}…`,
+          );
+          const uploaded = await uploadRoomImageDirect(image.file, signature);
+          uploadedGallery.push(uploaded);
+          uploadedPublicIds.push(uploaded.publicId);
+        }
+      }
+
+      setUploadStatus("Saving room details…");
+
+      // Only small text fields and Cloudinary references reach the Server Action.
+      const formData = new FormData();
+
+      // Text fields
+      formData.append("name", nameInput.value);
+      const slugInput = formRef.current?.querySelector(
+        'input[name="slug"]',
+      ) as HTMLInputElement;
+      if (slugInput?.value) {
+        formData.append("slug", slugInput.value);
+      }
+
+      const descriptionInput = formRef.current?.querySelector(
+        'textarea[name="description"]',
+      ) as HTMLTextAreaElement;
+      if (descriptionInput?.value) {
+        formData.append("description", descriptionInput.value);
+      }
+
+      const amenitiesInput = formRef.current?.querySelector(
+        'textarea[name="amenities"]',
+      ) as HTMLTextAreaElement;
+      if (amenitiesInput?.value) {
+        formData.append("amenities", amenitiesInput.value);
+      }
+
+      // Existing cover image
+      formData.append("existingCoverImage", coverImage ?? "");
+      if (coverImage) {
+        formData.append(
+          "existingCoverImagePublicId",
+          roomType?.coverImagePublicId ?? "",
+        );
+      }
       formData.append(
-        "existingCoverImagePublicId",
-        roomType?.coverImagePublicId ?? "",
+        "uploadedCoverImage",
+        uploadedCover ? JSON.stringify(uploadedCover) : "",
       );
+
+      // Existing gallery images
+      galleryImages.forEach((image) => {
+        formData.append("existingGalleryImages", image);
+      });
+      galleryImagePublicIds.forEach((publicId) => {
+        formData.append("existingGalleryImagePublicIds", publicId);
+      });
+      formData.append("uploadedGalleryImages", JSON.stringify(uploadedGallery));
+
+      startTransition(() => {
+        action(formData);
+      });
+    } catch (error) {
+      if (uploadedPublicIds.length > 0) {
+        await cleanupRoomImageUploadsAction(uploadedPublicIds).catch(() => {
+          // Server logs retain cleanup details; the actionable upload error remains visible.
+        });
+      }
+
+      setValidationError(
+        error instanceof Error
+          ? error.message
+          : "The images could not be uploaded. Please try again.",
+      );
+    } finally {
+      submittingRef.current = false;
+      setUploading(false);
+      setUploadStatus(null);
     }
-
-    // New cover image file
-    const coverFileInput = formRef.current?.querySelector(
-      'input[name="coverImage"]',
-    ) as HTMLInputElement;
-    if (coverFileInput?.files?.[0]) {
-      formData.append("coverImage", coverFileInput.files[0]);
-    }
-
-    // Existing gallery images
-    galleryImages.forEach((image) => {
-      formData.append("existingGalleryImages", image);
-    });
-    galleryImagePublicIds.forEach((publicId) => {
-      formData.append("existingGalleryImagePublicIds", publicId);
-    });
-
-    // New gallery image files
-    selectedGalleryImages.forEach((image) => {
-      formData.append("galleryImages", image.file);
-    });
-
-    // Submit the form inside a transition
-    startTransition(() => {
-      action(formData);
-    });
   }
+
+  const busy = uploading || pending || isPending;
 
   return (
     <form
@@ -455,13 +540,13 @@ function RoomTypeForm({
       onSubmit={handleSubmit}
     >
       {validationError && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div aria-live="assertive" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {validationError}
         </div>
       )}
 
       {state.message && !state.ok ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div aria-live="assertive" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {state.message}
         </div>
       ) : null}
@@ -515,7 +600,7 @@ function RoomTypeForm({
         <div>
           <p className="text-sm font-medium text-zinc-800">Cover image</p>
           <p className="mt-1 text-xs text-zinc-500">
-            This image appears on room cards and room details.
+            JPEG, PNG, or WebP. At least 1200 × 900 pixels and no more than 5 MB.
           </p>
         </div>
 
@@ -554,12 +639,13 @@ function RoomTypeForm({
           type="hidden"
           value={coverImage ? (roomType?.coverImagePublicId ?? "") : ""}
         />
-        <label className="inline-flex h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+        <label className={`inline-flex h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition ${busy ? "cursor-not-allowed opacity-60" : "hover:bg-zinc-50"}`}>
           <ImagePlus className="h-4 w-4" />
           Choose cover image
           <input
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="sr-only"
+            disabled={busy}
             name="coverImage"
             onChange={handleCoverChange}
             ref={coverInputRef}
@@ -572,7 +658,7 @@ function RoomTypeForm({
         <div>
           <p className="text-sm font-medium text-zinc-800">Gallery images</p>
           <p className="mt-1 text-xs text-zinc-500">
-            Current images stay unless removed. New images are added on save.
+            Add up to {ROOM_IMAGE_MAX_GALLERY_COUNT} images. Each must be at least 1200 × 900 pixels and no more than 5 MB.
           </p>
         </div>
 
@@ -611,12 +697,13 @@ function RoomTypeForm({
         )}
 
         <div className="flex flex-wrap gap-2">
-          <label className="inline-flex h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50">
+          <label className={`inline-flex h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition ${busy ? "cursor-not-allowed opacity-60" : "hover:bg-zinc-50"}`}>
             <ImagePlus className="h-4 w-4" />
             Add gallery images
             <input
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               className="sr-only"
+              disabled={busy}
               multiple
               name="galleryImages"
               onChange={handleGalleryChange}
@@ -627,6 +714,7 @@ function RoomTypeForm({
           {selectedGalleryImages.length > 0 ? (
             <button
               className="inline-flex h-10 items-center rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              disabled={busy}
               onClick={clearSelectedGalleryImages}
               type="button"
             >
@@ -636,12 +724,18 @@ function RoomTypeForm({
         </div>
       </div>
 
+      {uploadStatus ? (
+        <p aria-live="polite" className="text-sm font-medium text-zinc-700">
+          {uploadStatus}
+        </p>
+      ) : null}
+
       <button
         className="h-10 rounded-md bg-zinc-950 px-4 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
-        disabled={isPending}
+        disabled={busy}
         type="submit"
       >
-        {isPending ? "Saving. . ." : submitLabel}
+        {busy ? uploadStatus ?? "Saving…" : submitLabel}
       </button>
     </form>
   );
