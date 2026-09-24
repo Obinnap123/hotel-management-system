@@ -3,6 +3,9 @@ import {
   ROOM_IMAGE_MAX_BYTES,
   ROOM_IMAGE_MIN_HEIGHT,
   ROOM_IMAGE_MIN_WIDTH,
+  ROOM_IMAGE_OUTPUT_QUALITY,
+  calculateOptimizedRoomImageDimensions,
+  shouldOptimizeRoomImage,
   type UploadedRoomImage,
 } from "@/lib/cloudinary/room-images";
 
@@ -14,7 +17,7 @@ export type RoomImageUploadSignature = {
   timestamp: number;
 };
 
-export async function validateRoomImageFile(file: File) {
+export async function prepareRoomImageFile(file: File) {
   if (!isAcceptedRoomImageType(file.type)) {
     throw new Error("Use a JPEG, PNG, or WebP image.");
   }
@@ -23,7 +26,11 @@ export async function validateRoomImageFile(file: File) {
     throw new Error(`${file.name} is larger than 5 MB.`);
   }
 
-  const dimensions = await readImageDimensions(file);
+  const image = await loadImage(file);
+  const dimensions = {
+    width: image.naturalWidth,
+    height: image.naturalHeight,
+  };
 
   if (
     dimensions.width < ROOM_IMAGE_MIN_WIDTH ||
@@ -34,15 +41,35 @@ export async function validateRoomImageFile(file: File) {
     );
   }
 
-  return dimensions;
+  if (!shouldOptimizeRoomImage(file.size, dimensions.width, dimensions.height)) {
+    return file;
+  }
+
+  const optimizedDimensions = calculateOptimizedRoomImageDimensions(
+    dimensions.width,
+    dimensions.height,
+  );
+  const optimizedBlob = await renderOptimizedImage(
+    image,
+    optimizedDimensions.width,
+    optimizedDimensions.height,
+  );
+
+  // Keep the original when browser encoding does not produce a useful saving.
+  if (!optimizedBlob || optimizedBlob.size >= file.size * 0.95) {
+    return file;
+  }
+
+  return new File([optimizedBlob], replaceExtension(file.name, "webp"), {
+    type: "image/webp",
+    lastModified: file.lastModified,
+  });
 }
 
 export async function uploadRoomImageDirect(
   file: File,
   upload: RoomImageUploadSignature,
 ): Promise<UploadedRoomImage> {
-  await validateRoomImageFile(file);
-
   const formData = new FormData();
   formData.append("file", file);
   formData.append("api_key", upload.apiKey);
@@ -78,14 +105,14 @@ export async function uploadRoomImageDirect(
   return uploaded;
 }
 
-function readImageDimensions(file: File) {
-  return new Promise<{ width: number; height: number }>((resolve, reject) => {
+function loadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
     const image = document.createElement("img");
 
     image.onload = () => {
       URL.revokeObjectURL(objectUrl);
-      resolve({ width: image.naturalWidth, height: image.naturalHeight });
+      resolve(image);
     };
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
@@ -93,6 +120,34 @@ function readImageDimensions(file: File) {
     };
     image.src = objectUrl;
   });
+}
+
+function renderOptimizedImage(
+  image: HTMLImageElement,
+  width: number,
+  height: number,
+) {
+  return new Promise<Blob | null>((resolve) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      resolve(null);
+      return;
+    }
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, 0, 0, width, height);
+    canvas.toBlob(resolve, "image/webp", ROOM_IMAGE_OUTPUT_QUALITY);
+  });
+}
+
+function replaceExtension(fileName: string, extension: string) {
+  const baseName = fileName.replace(/\.[^.]+$/, "") || "room-image";
+  return `${baseName}.${extension}`;
 }
 
 function readCloudinaryError(result: unknown) {

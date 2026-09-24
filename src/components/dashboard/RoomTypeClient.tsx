@@ -22,8 +22,8 @@ import {
   type ActionState,
 } from "@/features/rooms/actions";
 import {
+  prepareRoomImageFile,
   uploadRoomImageDirect,
-  validateRoomImageFile,
 } from "@/lib/cloudinary/direct-room-upload";
 import {
   ROOM_IMAGE_MAX_GALLERY_COUNT,
@@ -430,9 +430,14 @@ function RoomTypeForm({
     try {
       setUploading(true);
 
-      for (const file of newFiles) {
-        await validateRoomImageFile(file);
+      const preparedFiles: File[] = [];
+      for (const [index, file] of newFiles.entries()) {
+        setUploadStatus(`Preparing image ${index + 1} of ${newFiles.length}…`);
+        preparedFiles.push(await prepareRoomImageFile(file));
       }
+
+      const preparedCover = coverFile ? preparedFiles[0] : null;
+      const preparedGallery = preparedFiles.slice(coverFile ? 1 : 0);
 
       if (newFiles.length > 0) {
         setUploadStatus("Preparing secure image upload…");
@@ -442,19 +447,28 @@ function RoomTypeForm({
           throw new Error(signature.message);
         }
 
-        if (coverFile) {
-          setUploadStatus("Uploading cover image…");
-          uploadedCover = await uploadRoomImageDirect(coverFile, signature);
+        let uploadIndex = 0;
+
+        if (preparedCover) {
+          setUploadStatus(
+            `Uploading image ${uploadIndex + 1} of ${newFiles.length}…`,
+          );
+          uploadedCover = await uploadRoomImageDirect(
+            preparedCover,
+            signature,
+          );
           uploadedPublicIds.push(uploadedCover.publicId);
+          uploadIndex += 1;
         }
 
-        for (const [index, image] of selectedGalleryImages.entries()) {
+        for (const image of preparedGallery) {
           setUploadStatus(
-            `Uploading gallery image ${index + 1} of ${selectedGalleryImages.length}…`,
+            `Uploading image ${uploadIndex + 1} of ${newFiles.length}…`,
           );
-          const uploaded = await uploadRoomImageDirect(image.file, signature);
+          const uploaded = await uploadRoomImageDirect(image, signature);
           uploadedGallery.push(uploaded);
           uploadedPublicIds.push(uploaded.publicId);
+          uploadIndex += 1;
         }
       }
 
