@@ -22,12 +22,19 @@ import {
   useEffect,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import { AutoDismissMessage } from "@/components/ui/AutoDismissMessage";
 import {
+  cleanupAboutImageUploadAction,
+  createAboutImageUploadSignatureAction,
   updateReservationWebsiteSettingsAction,
   type SettingsActionState,
 } from "@/features/settings/actions";
+import {
+  prepareAboutImageFile,
+  uploadAboutImageDirect,
+} from "@/lib/cloudinary/direct-about-upload";
 import { publicReservationPath } from "@/lib/public/routes";
 import { notifyReservationSiteUpdated } from "@/lib/public/site-refresh";
 import {
@@ -90,6 +97,10 @@ export function ReservationWebsiteSettingsForm({
     updateReservationWebsiteSettingsAction,
     initialActionState,
   );
+  const [isSubmitting, startSubmitTransition] = useTransition();
+  const [uploadError, setUploadError] = useState("");
+  const [uploadStatus, setUploadStatus] = useState("");
+  const submittingRef = useRef(false);
   const [draftCopy, setDraftCopy] = useState<ReservationWebsiteCopy>(() =>
     publishedCopy,
   );
@@ -111,6 +122,7 @@ export function ReservationWebsiteSettingsForm({
     JSON.stringify(facilities.map(({ title, description, iconKey }) => ({ title, description, iconKey }))) !==
     JSON.stringify(settings.facilities.map(({ title, description, iconKey }) => ({ title, description, iconKey })));
   const previewDirty = wordingDirty || facilitiesDirty || aboutImageDirty;
+  const busy = pending || isSubmitting || Boolean(uploadStatus);
 
   useEffect(() => {
     if (!state.ok || !state.submissionId) return;
@@ -249,6 +261,57 @@ export function ReservationWebsiteSettingsForm({
     setActivePreviewSection("amenities");
   }
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setUploadError("");
+
+    const formData = new FormData(event.currentTarget);
+    const aboutImageValue = formData.get("aboutImage");
+    const aboutImage =
+      aboutImageValue instanceof File && aboutImageValue.size > 0
+        ? aboutImageValue
+        : null;
+    let uploadedPublicId = "";
+
+    try {
+      if (aboutImage) {
+        setUploadStatus("Preparing About Hotel image…");
+        const preparedImage = await prepareAboutImageFile(aboutImage);
+        const signature = await createAboutImageUploadSignatureAction();
+
+        if (!signature.ok) {
+          throw new Error(signature.message);
+        }
+
+        setUploadStatus("Uploading About Hotel image…");
+        const uploaded = await uploadAboutImageDirect(preparedImage, signature);
+        uploadedPublicId = uploaded.publicId;
+        formData.set("uploadedAboutImage", JSON.stringify(uploaded));
+        formData.delete("aboutImage");
+      }
+
+      setUploadStatus("Saving website settings…");
+      startSubmitTransition(() => formAction(formData));
+    } catch (error) {
+      if (uploadedPublicId) {
+        await cleanupAboutImageUploadAction(uploadedPublicId).catch(() => {
+          // A failed cleanup should not hide the useful upload error.
+        });
+      }
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : "Unable to upload the About Hotel image.",
+      );
+    } finally {
+      setUploadStatus("");
+      submittingRef.current = false;
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-7">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
@@ -269,7 +332,7 @@ export function ReservationWebsiteSettingsForm({
       </div>
       <SettingsSectionNav active="/dashboard/settings/reservation-website" />
 
-      <form action={formAction} className="space-y-5">
+      <form className="space-y-5" onSubmit={handleSubmit}>
         <input
           name="facilities"
           type="hidden"
@@ -285,6 +348,11 @@ export function ReservationWebsiteSettingsForm({
         {state.message ? (
           <AutoDismissMessage variant={state.ok ? "success" : "error"}>
             {state.message}
+          </AutoDismissMessage>
+        ) : null}
+        {uploadError ? (
+          <AutoDismissMessage variant="error">
+            {uploadError}
           </AutoDismissMessage>
         ) : null}
 
@@ -641,6 +709,7 @@ export function ReservationWebsiteSettingsForm({
           title="About Hotel image"
         >
           <AboutImageManager
+            disabled={busy}
             key={`${settings.updatedAt}-${settings.aboutImage.url}`}
             onDirtyChange={setAboutImageDirty}
             onPreviewChange={setAboutImagePreviewUrl}
@@ -655,14 +724,19 @@ export function ReservationWebsiteSettingsForm({
           <HeroImageManager key={settings.updatedAt} settings={settings} />
         </SettingsPanel>
 
-        <div className="flex justify-end border-t border-slate-200 pt-5">
+        <div className="flex flex-col items-end gap-2 border-t border-slate-200 pt-5">
+          {uploadStatus ? (
+            <p aria-live="polite" className="text-sm text-slate-600">
+              {uploadStatus}
+            </p>
+          ) : null}
           <button
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400 sm:w-auto"
-            disabled={pending}
+            disabled={busy}
             type="submit"
           >
             <Save aria-hidden="true" className="h-4 w-4" />
-            {pending ? "Saving…" : "Save website settings"}
+            {busy ? uploadStatus || "Saving…" : "Save website settings"}
           </button>
         </div>
       </form>
@@ -873,10 +947,12 @@ function IconButton({
 }
 
 function AboutImageManager({
+  disabled,
   onDirtyChange,
   onPreviewChange,
   settings,
 }: {
+  disabled: boolean;
   onDirtyChange: (dirty: boolean) => void;
   onPreviewChange: (url: string) => void;
   settings: ReservationWebsiteSettingsValues;
@@ -951,12 +1027,15 @@ function AboutImageManager({
           />
         </SettingsField>
         <div className="flex flex-wrap gap-3">
-          <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-within:ring-2 focus-within:ring-slate-900 focus-within:ring-offset-2">
+          <label
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition focus-within:ring-2 focus-within:ring-slate-900 focus-within:ring-offset-2 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-slate-50"}`}
+          >
             <ImagePlus aria-hidden="true" className="h-4 w-4" />
             {settings.aboutImage.isDefault ? "Choose an image" : "Replace image"}
             <input
               accept="image/jpeg,image/png,image/webp"
               className="sr-only"
+              disabled={disabled}
               name="aboutImage"
               onChange={handleFile}
               ref={inputRef}
@@ -965,6 +1044,7 @@ function AboutImageManager({
           </label>
           <button
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+            disabled={disabled}
             onClick={restoreDefault}
             type="button"
           >
@@ -972,6 +1052,11 @@ function AboutImageManager({
             Use recommended image
           </button>
         </div>
+        <p className="text-xs leading-5 text-slate-500">
+          Use a JPEG, PNG, or WebP image that is at least 1600 × 1200
+          pixels. For the clearest result, use about 2000 × 1600 pixels with
+          the main subject near the centre. Maximum file size: 5 MB.
+        </p>
         {error ? (
           <p className="text-sm text-red-700" role="alert">
             {error}

@@ -3,9 +3,19 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/features/rooms/authorization";
 import {
+  createImageUploadSignature,
   deleteHotelImage,
   uploadHotelImage,
 } from "@/lib/cloudinary/upload";
+import {
+  ABOUT_IMAGE_ACCEPTED_TYPES,
+  ABOUT_IMAGE_FOLDER,
+  ABOUT_IMAGE_MAX_BYTES,
+  ABOUT_IMAGE_MIN_HEIGHT,
+  ABOUT_IMAGE_MIN_WIDTH,
+  isAboutImagePublicId,
+} from "@/lib/cloudinary/about-image";
+import type { UploadedRoomImage } from "@/lib/cloudinary/room-images";
 import { prisma } from "@/server/db/prisma";
 import {
   brandingThemeSettingsSchema,
@@ -20,7 +30,6 @@ const brandingPath = `${settingsPath}/branding`;
 const reservationWebsitePath = `${settingsPath}/reservation-website`;
 const brandingImageFolder = "hotel-management-system/branding";
 const heroImageFolder = "hotel-management-system/reservation-hero";
-const aboutImageFolder = "hotel-management-system/reservation-about";
 const maximumHeroImages = 4;
 
 export type SettingsActionState = {
@@ -28,6 +37,35 @@ export type SettingsActionState = {
   message: string;
   submissionId: string;
 };
+
+export type AboutImageUploadSignatureState =
+  | ({ ok: true } & ReturnType<typeof createImageUploadSignature>)
+  | { ok: false; message: string };
+
+export async function createAboutImageUploadSignatureAction(): Promise<AboutImageUploadSignatureState> {
+  await requireAdmin();
+
+  try {
+    return {
+      ok: true,
+      ...createImageUploadSignature(ABOUT_IMAGE_FOLDER),
+    };
+  } catch (error) {
+    console.error("[About Image Signature Error]", error);
+    return {
+      ok: false,
+      message: "Unable to prepare the About Hotel image upload.",
+    };
+  }
+}
+
+export async function cleanupAboutImageUploadAction(publicId: string) {
+  await requireAdmin();
+
+  if (isAboutImagePublicId(publicId)) {
+    await deleteHotelImage(publicId);
+  }
+}
 
 export async function updateHotelProfileSettingsAction(
   _state: SettingsActionState,
@@ -78,11 +116,18 @@ export async function updateReservationWebsiteSettingsAction(
 ): Promise<SettingsActionState> {
   await requireAdmin();
 
+  const uploadedAboutResult = readUploadedAboutImage(formData);
+
+  if (!uploadedAboutResult.ok) {
+    return failure(uploadedAboutResult.message);
+  }
+
   const parsed = reservationWebsiteSettingsSchema.safeParse(
     Object.fromEntries(formData),
   );
 
   if (!parsed.success) {
+    await cleanupUploadedAboutImage(uploadedAboutResult.image);
     return failure(
       parsed.error.issues[0]?.message ?? "Invalid website settings.",
     );
@@ -91,10 +136,13 @@ export async function updateReservationWebsiteSettingsAction(
   const facilities = parseFacilities(formData.get("facilities"));
 
   if (!facilities.ok) {
+    await cleanupUploadedAboutImage(uploadedAboutResult.image);
     return failure(facilities.message);
   }
 
-  const uploadedPublicIds: string[] = [];
+  const uploadedPublicIds: string[] = uploadedAboutResult.image
+    ? [uploadedAboutResult.image.publicId]
+    : [];
   const legacyWebsiteMetadata = {
     websiteTitle: parsed.data.websiteTitle,
     websiteDescription: parsed.data.websiteDescription,
@@ -112,16 +160,21 @@ export async function updateReservationWebsiteSettingsAction(
       }),
     ]);
     const heroMedia = await resolveHeroMedia(formData, uploadedPublicIds);
-    const aboutImage = await resolveBrandingMedia({
-      currentPublicId: currentWebsite?.aboutImagePublicId ?? null,
-      currentUrl: currentWebsite?.aboutImageUrl ?? null,
-      fileField: "aboutImage",
-      folder: aboutImageFolder,
-      formData,
-      label: "About Hotel image",
-      removeField: "removeAboutImage",
-      uploadedPublicIds,
-    });
+    const aboutImage = uploadedAboutResult.image
+      ? {
+          url: uploadedAboutResult.image.secureUrl,
+          publicId: uploadedAboutResult.image.publicId,
+        }
+      : await resolveBrandingMedia({
+          currentPublicId: currentWebsite?.aboutImagePublicId ?? null,
+          currentUrl: currentWebsite?.aboutImageUrl ?? null,
+          fileField: "aboutImage",
+          folder: ABOUT_IMAGE_FOLDER,
+          formData,
+          label: "About Hotel image",
+          removeField: "removeAboutImage",
+          uploadedPublicIds,
+        });
 
     await prisma.$transaction(async (transaction) => {
       const websiteContent = await transaction.websiteContent.upsert({
@@ -403,6 +456,90 @@ async function resolveBrandingMedia({
   }
 
   return { url: currentUrl, publicId: currentPublicId };
+}
+
+function readUploadedAboutImage(
+  formData: FormData,
+):
+  | { ok: true; image: UploadedRoomImage | null }
+  | { ok: false; message: string } {
+  const value = String(formData.get("uploadedAboutImage") ?? "");
+
+  if (!value) {
+    return { ok: true, image: null };
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return { ok: true, image: validateUploadedAboutImage(parsed) };
+  } catch (error) {
+    console.error("[About Image Metadata Error]", error);
+    return {
+      ok: false,
+      message:
+        "The uploaded About Hotel image details were invalid. Please select the image again.",
+    };
+  }
+}
+
+function validateUploadedAboutImage(value: unknown): UploadedRoomImage {
+  if (!value || typeof value !== "object") {
+    throw new Error("Missing About Hotel image upload details.");
+  }
+
+  const image = value as Record<string, unknown>;
+  const secureUrl = typeof image.secureUrl === "string" ? image.secureUrl : "";
+  const publicId = typeof image.publicId === "string" ? image.publicId : "";
+  const width = Number(image.width);
+  const height = Number(image.height);
+  const bytes = Number(image.bytes);
+  const format =
+    typeof image.format === "string" ? image.format.toLowerCase() : "";
+  const cloudName =
+    process.env.CLOUDINARY_CLOUD_NAME ??
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ??
+    "";
+  const parsedUrl = new URL(secureUrl);
+
+  if (
+    parsedUrl.protocol !== "https:" ||
+    parsedUrl.hostname !== "res.cloudinary.com" ||
+    !parsedUrl.pathname.startsWith(`/${cloudName}/image/upload/`) ||
+    !isAboutImagePublicId(publicId)
+  ) {
+    throw new Error(
+      "Image does not belong to the configured About Hotel image folder.",
+    );
+  }
+
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width < ABOUT_IMAGE_MIN_WIDTH ||
+    height < ABOUT_IMAGE_MIN_HEIGHT
+  ) {
+    throw new Error("About Hotel image dimensions are too small.");
+  }
+
+  if (!Number.isFinite(bytes) || bytes <= 0 || bytes > ABOUT_IMAGE_MAX_BYTES) {
+    throw new Error("About Hotel image file size is invalid.");
+  }
+
+  if (![
+    "jpg",
+    "jpeg",
+    ...ABOUT_IMAGE_ACCEPTED_TYPES.map((type) => type.replace("image/", "")),
+  ].includes(format)) {
+    throw new Error("About Hotel image format is not supported.");
+  }
+
+  return { secureUrl, publicId, width, height, bytes, format };
+}
+
+async function cleanupUploadedAboutImage(image: UploadedRoomImage | null) {
+  if (image && isAboutImagePublicId(image.publicId)) {
+    await deleteHotelImage(image.publicId);
+  }
 }
 
 function parseFacilities(value: FormDataEntryValue | null):

@@ -12,17 +12,21 @@ export async function uploadRoomTypeImage(file: File) {
 }
 
 export function createRoomImageUploadSignature() {
+  return createImageUploadSignature(ROOM_IMAGE_FOLDER);
+}
+
+export function createImageUploadSignature(folder: string) {
   const credentials = getCloudinaryCredentials();
   const timestamp = Math.floor(Date.now() / 1000);
   const signature = cloudinary.utils.api_sign_request(
-    { folder: ROOM_IMAGE_FOLDER, timestamp },
+    { folder, timestamp },
     credentials.apiSecret,
   );
 
   return {
     apiKey: credentials.apiKey,
     cloudName: credentials.cloudName,
-    folder: ROOM_IMAGE_FOLDER,
+    folder,
     signature,
     timestamp,
   };
