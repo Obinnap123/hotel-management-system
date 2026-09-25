@@ -26,7 +26,6 @@ export default async function ReservationWebsiteSettingsPage() {
 
   return (
     <ReservationWebsiteSettingsForm
-      key={config.website.updatedAt.toISOString()}
       settings={{
         hotelName: config.hotel.name,
         websiteTitle: config.website.configuredTitle,
