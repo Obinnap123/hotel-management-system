@@ -542,29 +542,71 @@ textarea:focus {
   box-shadow: 0 0 0 4px var(--ring);
 }
 
-.auto-dismiss-message {
-  animation-name: auto-dismiss-message;
-  animation-fill-mode: forwards;
-  overflow: hidden;
+.dashboard-notification {
+  align-items: flex-start;
+  border-radius: 0.75rem;
+  border-width: 1px;
+  box-shadow:
+    0 18px 45px -24px rgb(15 23 42 / 0.38),
+    0 8px 18px -12px rgb(15 23 42 / 0.22);
+  display: flex;
+  gap: 0.75rem;
+  isolation: isolate;
+  max-width: calc(100vw - 2rem);
+  padding: 0.875rem;
+  position: fixed;
+  right: 1rem;
+  top: 1rem;
+  width: min(24rem, calc(100vw - 2rem));
+  z-index: 120;
 }
 
-@keyframes auto-dismiss-message {
-  0%,
-  80% {
-    max-height: 80px;
-    opacity: 1;
-    padding-bottom: 0.5rem;
-    padding-top: 0.5rem;
+.dashboard-notification--visible {
+  animation: dashboard-notification-enter 240ms cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+.dashboard-notification--leaving {
+  animation: dashboard-notification-exit 180ms ease-in both;
+  pointer-events: none;
+}
+
+@keyframes dashboard-notification-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.75rem, 0) scale(0.985);
   }
 
-  100% {
-    border-width: 0;
-    margin-bottom: 0;
-    margin-top: 0;
-    max-height: 0;
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes dashboard-notification-exit {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
     opacity: 0;
-    padding-bottom: 0;
-    padding-top: 0;
+    transform: translate3d(0.5rem, -0.25rem, 0) scale(0.985);
+  }
+}
+
+@media (min-width: 640px) {
+  .dashboard-notification {
+    right: 1.5rem;
+    top: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-notification--visible,
+  .dashboard-notification--leaving {
+    animation-duration: 0.01ms;
+    transform: none;
   }
 }
 

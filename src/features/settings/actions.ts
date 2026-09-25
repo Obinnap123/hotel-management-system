@@ -17,8 +17,10 @@ import {
 } from "@/lib/cloudinary/about-image";
 import type { UploadedRoomImage } from "@/lib/cloudinary/room-images";
 import { prisma } from "@/server/db/prisma";
+import { retryTransientDatabaseRead } from "@/server/db/retry";
 import {
   brandingThemeSettingsSchema,
+  homepageStructureSchema,
   hotelProfileSettingsSchema,
   reservationFacilitiesSchema,
   reservationWebsiteSettingsSchema,
@@ -140,6 +142,15 @@ export async function updateReservationWebsiteSettingsAction(
     return failure(facilities.message);
   }
 
+  const homepageStructure = parseHomepageStructure(
+    formData.get("homepageStructure"),
+  );
+
+  if (!homepageStructure.ok) {
+    await cleanupUploadedAboutImage(uploadedAboutResult.image);
+    return failure(homepageStructure.message);
+  }
+
   const uploadedPublicIds: string[] = uploadedAboutResult.image
     ? [uploadedAboutResult.image.publicId]
     : [];
@@ -149,16 +160,43 @@ export async function updateReservationWebsiteSettingsAction(
   };
 
   try {
-    const [currentSettings, currentWebsite] = await Promise.all([
-      prisma.hotelSettings.findUnique({
-        where: { singletonKey: "default" },
-        select: { heroImagePublicIds: true },
-      }),
-      prisma.websiteContent.findUnique({
-        where: { singletonKey: "default" },
-        select: { aboutImageUrl: true, aboutImagePublicId: true },
-      }),
-    ]);
+    const [currentSettings, currentWebsite, eligibleFeaturedRoomTypes] =
+      await retryTransientDatabaseRead(() => Promise.all([
+        prisma.hotelSettings.findUnique({
+          where: { singletonKey: "default" },
+          select: { heroImagePublicIds: true },
+        }),
+        prisma.websiteContent.findUnique({
+          where: { singletonKey: "default" },
+          select: { aboutImageUrl: true, aboutImagePublicId: true },
+        }),
+        prisma.roomType.findMany({
+          where: {
+            id: { in: homepageStructure.data.featuredRoomTypeIds },
+          },
+          select: {
+            id: true,
+            _count: { select: { rooms: true } },
+          },
+        }),
+      ]));
+
+    if (
+      eligibleFeaturedRoomTypes.length !==
+      homepageStructure.data.featuredRoomTypeIds.length
+    ) {
+      throw new Error(
+        "Every featured room type must still exist.",
+      );
+    }
+    if (
+      homepageStructure.data.showFeaturedRooms &&
+      eligibleFeaturedRoomTypes.some((roomType) => roomType._count.rooms === 0)
+    ) {
+      throw new Error(
+        "Add at least one room to every featured room type or hide the Featured rooms section.",
+      );
+    }
     const heroMedia = await resolveHeroMedia(formData, uploadedPublicIds);
     const aboutImage = uploadedAboutResult.image
       ? {
@@ -183,12 +221,20 @@ export async function updateReservationWebsiteSettingsAction(
         },
         update: {
           ...parsed.data,
+          showFeaturedRooms: homepageStructure.data.showFeaturedRooms,
+          showFacilities: homepageStructure.data.showFacilities,
+          showAboutHotel: homepageStructure.data.showAboutHotel,
+          showBookingSteps: homepageStructure.data.showBookingSteps,
           aboutImageUrl: aboutImage.url,
           aboutImagePublicId: aboutImage.publicId,
         },
         create: {
           singletonKey: "default",
           ...parsed.data,
+          showFeaturedRooms: homepageStructure.data.showFeaturedRooms,
+          showFacilities: homepageStructure.data.showFacilities,
+          showAboutHotel: homepageStructure.data.showAboutHotel,
+          showBookingSteps: homepageStructure.data.showBookingSteps,
           aboutImageUrl: aboutImage.url,
           aboutImagePublicId: aboutImage.publicId,
         },
@@ -222,6 +268,22 @@ export async function updateReservationWebsiteSettingsAction(
           websiteContentId: websiteContent.id,
         })),
       });
+
+      await transaction.websiteFeaturedRoomType.deleteMany({
+        where: { websiteContentId: websiteContent.id },
+      });
+
+      if (homepageStructure.data.featuredRoomTypeIds.length > 0) {
+        await transaction.websiteFeaturedRoomType.createMany({
+          data: homepageStructure.data.featuredRoomTypeIds.map(
+            (roomTypeId, displayOrder) => ({
+              displayOrder,
+              roomTypeId,
+              websiteContentId: websiteContent.id,
+            }),
+          ),
+        });
+      }
 
       await transaction.hotelSettings.upsert({
         where: {
@@ -564,6 +626,31 @@ function parseFacilities(value: FormDataEntryValue | null):
     return { ok: true, data: parsed.data };
   } catch {
     return { ok: false, message: "Invalid homepage facilities." };
+  }
+}
+
+function parseHomepageStructure(value: FormDataEntryValue | null):
+  | { ok: true; data: ReturnType<typeof homepageStructureSchema.parse> }
+  | { ok: false; message: string } {
+  if (typeof value !== "string") {
+    return { ok: false, message: "Homepage structure details are required." };
+  }
+
+  try {
+    const parsedJson: unknown = JSON.parse(value);
+    const parsed = homepageStructureSchema.safeParse(parsedJson);
+
+    if (!parsed.success) {
+      return {
+        ok: false,
+        message:
+          parsed.error.issues[0]?.message ?? "Invalid homepage structure.",
+      };
+    }
+
+    return { ok: true, data: parsed.data };
+  } catch {
+    return { ok: false, message: "Invalid homepage structure." };
   }
 }
 

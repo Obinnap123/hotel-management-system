@@ -19,9 +19,11 @@ type PublicHeroCopy = Pick<
 
 export function PublicHero({
   copy,
+  featuredRoomsVisible,
   heroImages,
 }: {
   copy: PublicHeroCopy;
+  featuredRoomsVisible: boolean;
   heroImages: string[];
 }) {
   const images = heroImages;
@@ -51,7 +53,11 @@ export function PublicHero({
           <p className="mt-7 max-w-xl text-base leading-8 text-white/76 sm:text-lg">{copy.heroDescription}</p>
           <div className="mt-9 flex flex-wrap items-center gap-5">
             <Link className="inline-flex min-h-12 items-center gap-3 bg-[var(--reservation-accent)] px-6 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[var(--reservation-on-accent)] transition hover:bg-[var(--reservation-accent-hover)]" href={publicReservationPath("/rooms")}>{copy.heroPrimaryCtaLabel} <ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" /></Link>
-            <a className="inline-flex min-h-11 items-center gap-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition hover:text-white" href="#featured-stays">{copy.heroSecondaryCtaLabel} <ArrowDown aria-hidden="true" className="h-4 w-4 shrink-0" /></a>
+            {featuredRoomsVisible ? (
+              <a className="inline-flex min-h-11 items-center gap-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition hover:text-white" href="#featured-stays">{copy.heroSecondaryCtaLabel} <ArrowDown aria-hidden="true" className="h-4 w-4 shrink-0" /></a>
+            ) : (
+              <Link className="inline-flex min-h-11 items-center gap-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white/80 transition hover:text-white" href={publicReservationPath("/rooms")}>{copy.heroSecondaryCtaLabel} <ArrowUpRight aria-hidden="true" className="h-4 w-4 shrink-0" /></Link>
+            )}
           </div>
         </div>
 

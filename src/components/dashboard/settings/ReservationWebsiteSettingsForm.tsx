@@ -14,7 +14,6 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -50,10 +49,17 @@ import {
   type ReservationFacilityIconKey,
 } from "@/lib/reservation-facilities";
 import { ReservationFacilityIcon } from "@/components/public/ReservationFacilityIcon";
+import {
+  homepageFeaturedRoomLimit,
+  type HomepageSectionVisibility,
+} from "@/lib/homepage-structure";
 import { SettingsField, settingsInputClass } from "./SettingsField";
 import { SettingsPageHeader } from "./SettingsPageHeader";
 import { SettingsSectionNav } from "./SettingsSectionNav";
-import type { ReservationWebsiteSettingsValues } from "./settings-types";
+import type {
+  HomepageRoomTypeOption,
+  ReservationWebsiteSettingsValues,
+} from "./settings-types";
 import {
   WebsiteWordingPreview,
   type WordingPreviewSection,
@@ -88,7 +94,6 @@ export function ReservationWebsiteSettingsForm({
 }: {
   settings: ReservationWebsiteSettingsValues;
 }) {
-  const router = useRouter();
   const publishedCopy = resolveReservationWebsiteCopy(
     settings.configuredCopy,
     settings.defaultCopy,
@@ -109,6 +114,13 @@ export function ReservationWebsiteSettingsForm({
   const [facilities, setFacilities] = useState<ReservationFacility[]>(() =>
     settings.facilities.map((facility) => ({ ...facility })),
   );
+  const [featuredRoomTypeIds, setFeaturedRoomTypeIds] = useState<string[]>(
+    () => [...settings.featuredRoomTypeIds],
+  );
+  const [sectionVisibility, setSectionVisibility] =
+    useState<HomepageSectionVisibility>(() => ({
+      ...settings.sectionVisibility,
+    }));
   const [aboutImagePreviewUrl, setAboutImagePreviewUrl] = useState(
     settings.aboutImage.url,
   );
@@ -122,13 +134,18 @@ export function ReservationWebsiteSettingsForm({
     JSON.stringify(facilities.map(({ title, description, iconKey }) => ({ title, description, iconKey }))) !==
     JSON.stringify(settings.facilities.map(({ title, description, iconKey }) => ({ title, description, iconKey })));
   const previewDirty = wordingDirty || facilitiesDirty || aboutImageDirty;
+  const homepageStructureDirty =
+    JSON.stringify(featuredRoomTypeIds) !==
+      JSON.stringify(settings.featuredRoomTypeIds) ||
+    JSON.stringify(sectionVisibility) !==
+      JSON.stringify(settings.sectionVisibility);
+  const pageContentDirty = previewDirty || homepageStructureDirty;
   const busy = pending || isSubmitting || Boolean(uploadStatus);
 
   useEffect(() => {
     if (!state.ok || !state.submissionId) return;
     notifyReservationSiteUpdated();
-    router.refresh();
-  }, [router, state.ok, state.submissionId]);
+  }, [state.ok, state.submissionId]);
 
   useEffect(
     () => () => {
@@ -345,8 +362,19 @@ export function ReservationWebsiteSettingsForm({
             })),
           )}
         />
+        <input
+          name="homepageStructure"
+          type="hidden"
+          value={JSON.stringify({
+            featuredRoomTypeIds,
+            ...sectionVisibility,
+          })}
+        />
         {state.message ? (
-          <AutoDismissMessage variant={state.ok ? "success" : "error"}>
+          <AutoDismissMessage
+            instanceKey={state.submissionId}
+            variant={state.ok ? "success" : "error"}
+          >
             {state.message}
           </AutoDismissMessage>
         ) : null}
@@ -386,6 +414,19 @@ export function ReservationWebsiteSettingsForm({
               />
             </SettingsField>
           </div>
+        </SettingsPanel>
+
+        <SettingsPanel
+          description="Choose the optional sections shown on the homepage and the room types promoted there. This never changes room inventory or the complete Rooms & Suites page."
+          title="Homepage structure"
+        >
+          <HomepageStructureManager
+            featuredRoomTypeIds={featuredRoomTypeIds}
+            onFeaturedRoomTypeIdsChange={setFeaturedRoomTypeIds}
+            onSectionVisibilityChange={setSectionVisibility}
+            roomTypes={settings.homepageRoomTypes}
+            sectionVisibility={sectionVisibility}
+          />
         </SettingsPanel>
 
         <SettingsPanel
@@ -609,7 +650,7 @@ export function ReservationWebsiteSettingsForm({
                 copy={draftCopy}
                 hotelName={settings.hotelName}
                 facilities={facilities}
-                isDirty={previewDirty}
+                isDirty={pageContentDirty}
                 onSectionChange={setActivePreviewSection}
                 preview={{
                   ...settings.preview,
@@ -651,7 +692,7 @@ export function ReservationWebsiteSettingsForm({
                 hotelName={settings.hotelName}
                 initialMode="mobile"
                 facilities={facilities}
-                isDirty={previewDirty}
+                isDirty={pageContentDirty}
                 onSectionChange={setActivePreviewSection}
                 preview={{
                   ...settings.preview,
@@ -806,6 +847,243 @@ function WebsiteCopyField({
         <input {...sharedProps} className={settingsInputClass} />
       )}
     </SettingsField>
+  );
+}
+
+const homepageSectionOptions: Array<{
+  key: keyof HomepageSectionVisibility;
+  title: string;
+  description: string;
+}> = [
+  {
+    key: "showFeaturedRooms",
+    title: "Featured rooms",
+    description: "Promoted room types and the link to the complete collection.",
+  },
+  {
+    key: "showFacilities",
+    title: "Facilities",
+    description: "The practical services and amenities offered by the hotel.",
+  },
+  {
+    key: "showAboutHotel",
+    title: "About Hotel",
+    description: "The hotel story, supporting photograph, and image caption.",
+  },
+  {
+    key: "showBookingSteps",
+    title: "How booking works",
+    description: "The three-step guide from choosing a room to reception.",
+  },
+];
+
+function HomepageStructureManager({
+  featuredRoomTypeIds,
+  onFeaturedRoomTypeIdsChange,
+  onSectionVisibilityChange,
+  roomTypes,
+  sectionVisibility,
+}: {
+  featuredRoomTypeIds: string[];
+  onFeaturedRoomTypeIdsChange: (roomTypeIds: string[]) => void;
+  onSectionVisibilityChange: (visibility: HomepageSectionVisibility) => void;
+  roomTypes: HomepageRoomTypeOption[];
+  sectionVisibility: HomepageSectionVisibility;
+}) {
+  const selectedRoomTypes = featuredRoomTypeIds.flatMap((roomTypeId) => {
+    const roomType = roomTypes.find((option) => option.id === roomTypeId);
+    return roomType ? [roomType] : [];
+  });
+  const availableRoomTypes = roomTypes.filter(
+    (roomType) => !featuredRoomTypeIds.includes(roomType.id),
+  );
+
+  function addRoomType(roomTypeId: string) {
+    if (featuredRoomTypeIds.length >= homepageFeaturedRoomLimit) return;
+    onFeaturedRoomTypeIdsChange([...featuredRoomTypeIds, roomTypeId]);
+  }
+
+  function moveRoomType(index: number, direction: -1 | 1) {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= featuredRoomTypeIds.length) return;
+
+    const nextIds = [...featuredRoomTypeIds];
+    [nextIds[index], nextIds[nextIndex]] = [
+      nextIds[nextIndex],
+      nextIds[index],
+    ];
+    onFeaturedRoomTypeIdsChange(nextIds);
+  }
+
+  function removeRoomType(roomTypeId: string) {
+    onFeaturedRoomTypeIdsChange(
+      featuredRoomTypeIds.filter((id) => id !== roomTypeId),
+    );
+  }
+
+  return (
+    <div className="space-y-7">
+      <fieldset>
+        <legend className="text-sm font-semibold text-slate-950">
+          Optional homepage sections
+        </legend>
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          Navigation, the hero, room search, and the footer always remain
+          available.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {homepageSectionOptions.map((option) => (
+            <label
+              className="flex cursor-pointer gap-3 rounded-lg border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:bg-slate-50"
+              key={option.key}
+            >
+              <input
+                checked={sectionVisibility[option.key]}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-slate-950"
+                onChange={(event) =>
+                  onSectionVisibilityChange({
+                    ...sectionVisibility,
+                    [option.key]: event.target.checked,
+                  })
+                }
+                type="checkbox"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-slate-900">
+                  {option.title}
+                </span>
+                <span className="mt-1 block text-xs leading-5 text-slate-500">
+                  {option.description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <section className="border-t border-slate-200 pt-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h4 className="text-sm font-semibold text-slate-950">
+              Featured room types
+            </h4>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              Choose up to {homepageFeaturedRoomLimit}. Their order here is
+              their order on the homepage.
+            </p>
+          </div>
+          <p className="text-xs font-semibold text-slate-600">
+            {featuredRoomTypeIds.length} / {homepageFeaturedRoomLimit} selected
+          </p>
+        </div>
+
+        {selectedRoomTypes.length > 0 ? (
+          <ol className="mt-4 space-y-2">
+            {selectedRoomTypes.map((roomType, index) => (
+              <li
+                className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3"
+                key={roomType.id}
+              >
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-950 text-xs font-semibold text-white">
+                  {index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-slate-950">
+                    {roomType.name}
+                  </p>
+                  <p
+                    className={`text-xs ${roomType.roomInventoryCount === 0 ? "font-medium text-amber-700" : "text-slate-500"}`}
+                  >
+                    {roomType.roomInventoryCount === 0
+                      ? "No rooms — remove it or hide Featured rooms before saving"
+                      : `${roomType.roomInventoryCount} ${roomType.roomInventoryCount === 1 ? "room" : "rooms"} in inventory`}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <IconButton
+                    disabled={index === 0}
+                    label={`Move ${roomType.name} up`}
+                    onClick={() => moveRoomType(index, -1)}
+                  >
+                    <ArrowUp aria-hidden="true" className="h-4 w-4" />
+                  </IconButton>
+                  <IconButton
+                    disabled={index === selectedRoomTypes.length - 1}
+                    label={`Move ${roomType.name} down`}
+                    onClick={() => moveRoomType(index, 1)}
+                  >
+                    <ArrowDown aria-hidden="true" className="h-4 w-4" />
+                  </IconButton>
+                  <IconButton
+                    disabled={false}
+                    label={`Remove ${roomType.name} from featured rooms`}
+                    onClick={() => removeRoomType(roomType.id)}
+                  >
+                    <Trash2 aria-hidden="true" className="h-4 w-4" />
+                  </IconButton>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center">
+            <p className="text-sm font-medium text-slate-700">
+              No featured room types selected.
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Choose a room type below or hide the Featured rooms section.
+            </p>
+          </div>
+        )}
+
+        {roomTypes.length === 0 ? (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            Create a room type and add rooms before selecting homepage features.{" "}
+            <Link
+              className="font-semibold underline underline-offset-4"
+              href="/dashboard/room-types"
+            >
+              Manage room types
+            </Link>
+          </div>
+        ) : availableRoomTypes.length > 0 ? (
+          <div className="mt-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+              Available room types
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {availableRoomTypes.map((roomType) => {
+                const hasInventory = roomType.roomInventoryCount > 0;
+                const selectionFull =
+                  featuredRoomTypeIds.length >= homepageFeaturedRoomLimit;
+
+                return (
+                  <button
+                    className="flex min-h-14 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-55"
+                    disabled={!hasInventory || selectionFull}
+                    key={roomType.id}
+                    onClick={() => addRoomType(roomType.id)}
+                    type="button"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-slate-900">
+                        {roomType.name}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-slate-500">
+                        {hasInventory
+                          ? `${roomType.roomInventoryCount} ${roomType.roomInventoryCount === 1 ? "room" : "rooms"}`
+                          : "Add a room before featuring"}
+                      </span>
+                    </span>
+                    <Plus aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+      </section>
+    </div>
   );
 }
 

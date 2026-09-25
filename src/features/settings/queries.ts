@@ -1,10 +1,10 @@
 import { cache } from "react";
 import { prisma } from "@/server/db/prisma";
-import { retryTransientDatabaseDnsFailure } from "@/server/db/retry";
+import { retryTransientDatabaseRead } from "@/server/db/retry";
 import { buildReservationSiteConfig } from "./reservation-site-config";
 
 export const getHotelSettings = cache(async function getHotelSettings() {
-  return retryTransientDatabaseDnsFailure(async () => {
+  return retryTransientDatabaseRead(async () => {
     const settings = await prisma.hotelSettings.findUnique({
       where: {
         singletonKey: "default",
@@ -38,7 +38,7 @@ export const getReservationSiteConfig = cache(
   async function getReservationSiteConfig() {
     const hotel = await getHotelSettings();
 
-    const [website, branding] = await retryTransientDatabaseDnsFailure(() =>
+    const [website, branding] = await retryTransientDatabaseRead(() =>
       Promise.all([
         prisma.websiteContent.findUnique({
           where: { singletonKey: "default" },
@@ -47,6 +47,9 @@ export const getReservationSiteConfig = cache(
               orderBy: { displayOrder: "asc" },
             },
             facilities: {
+              orderBy: { displayOrder: "asc" },
+            },
+            featuredRoomTypes: {
               orderBy: { displayOrder: "asc" },
             },
           },
@@ -58,5 +61,24 @@ export const getReservationSiteConfig = cache(
     );
 
     return buildReservationSiteConfig({ branding, hotel, website });
+  },
+);
+
+export const getHomepageRoomTypeOptions = cache(
+  async function getHomepageRoomTypeOptions() {
+    return retryTransientDatabaseRead(() =>
+      prisma.roomType.findMany({
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          coverImage: true,
+          _count: {
+            select: { rooms: true },
+          },
+        },
+      }),
+    );
   },
 );

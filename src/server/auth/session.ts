@@ -7,6 +7,7 @@ import {
   verifySessionToken,
 } from "@/lib/auth/session-token";
 import { prisma } from "@/server/db/prisma";
+import { retryTransientDatabaseRead } from "@/server/db/retry";
 
 const sessionDurationMs = 1000 * 60 * 60 * 8;
 
@@ -47,19 +48,21 @@ export async function getCurrentActiveSession() {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
-    where: {
-      id: session.userId,
-    },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      role: true,
-      status: true,
-      sessionVersion: true,
-    },
-  });
+  const user = await retryTransientDatabaseRead(() =>
+    prisma.user.findUnique({
+      where: {
+        id: session.userId,
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        status: true,
+        sessionVersion: true,
+      },
+    }),
+  );
 
   if (
     !user ||

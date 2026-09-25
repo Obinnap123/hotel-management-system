@@ -35,6 +35,25 @@ export type PublicRoomTypeDetails = PublicRoomTypeSummary & {
 export async function getFeaturedPublicRoomTypes(
   limit = 3,
 ): Promise<PublicRoomTypeSummary[]> {
+  const configuredPlacements = await prisma.websiteFeaturedRoomType.findMany({
+    where: {
+      websiteContent: { singletonKey: "default" },
+    },
+    orderBy: { displayOrder: "asc" },
+    take: limit,
+    select: {
+      roomType: {
+        include: publicRoomTypeInclude,
+      },
+    },
+  });
+
+  if (configuredPlacements.length > 0) {
+    return configuredPlacements
+      .map((placement) => toPublicRoomTypeSummary(placement.roomType))
+      .filter((roomType) => roomType.pricePerNight !== null);
+  }
+
   const roomTypes = await prisma.roomType.findMany({
     include: publicRoomTypeInclude,
     orderBy: {

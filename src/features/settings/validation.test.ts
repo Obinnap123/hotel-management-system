@@ -3,9 +3,72 @@ import { describe, it } from "node:test";
 import { createDefaultReservationWebsiteCopy } from "@/lib/reservation-content";
 import {
   brandingThemeSettingsSchema,
+  homepageStructureSchema,
   reservationFacilitiesSchema,
   reservationWebsiteSettingsSchema,
 } from "./validation";
+
+describe("homepage structure validation", () => {
+  it("accepts ordered featured rooms and optional section visibility", () => {
+    const result = homepageStructureSchema.safeParse({
+      featuredRoomTypeIds: ["deluxe", "suite", "classic"],
+      showFeaturedRooms: true,
+      showFacilities: true,
+      showAboutHotel: false,
+      showBookingSteps: true,
+    });
+
+    assert.equal(result.success, true);
+  });
+
+  it("requires a selection when featured rooms are visible", () => {
+    const result = homepageStructureSchema.safeParse({
+      featuredRoomTypeIds: [],
+      showFeaturedRooms: true,
+      showFacilities: true,
+      showAboutHotel: true,
+      showBookingSteps: true,
+    });
+
+    assert.equal(result.success, false);
+  });
+
+  it("allows no selection when the featured section is hidden", () => {
+    const result = homepageStructureSchema.safeParse({
+      featuredRoomTypeIds: [],
+      showFeaturedRooms: false,
+      showFacilities: true,
+      showAboutHotel: true,
+      showBookingSteps: true,
+    });
+
+    assert.equal(result.success, true);
+  });
+
+  it("rejects duplicates and more than three featured rooms", () => {
+    const base = {
+      showFeaturedRooms: true,
+      showFacilities: true,
+      showAboutHotel: true,
+      showBookingSteps: true,
+    };
+
+    assert.equal(
+      homepageStructureSchema.safeParse({
+        ...base,
+        featuredRoomTypeIds: ["suite", "suite"],
+      }).success,
+      false,
+    );
+    assert.equal(
+      homepageStructureSchema.safeParse({
+        ...base,
+        featuredRoomTypeIds: ["one", "two", "three", "four"],
+      }).success,
+      false,
+    );
+  });
+});
 
 describe("branding theme settings validation", () => {
   it("accepts approved values and normalizes hexadecimal colours", () => {

@@ -10,7 +10,11 @@ export function createPrismaAdapter() {
 
   const pool = new Pool({
     connectionString: removeSslMode(connectionString),
-    max: 3,
+    // A Vercel deployment can run many warm instances at once. Keeping each
+    // production instance to one connection prevents those instances from
+    // collectively exhausting the Supabase pool. Local development can use a
+    // few connections because it is one long-running process.
+    max: process.env.NODE_ENV === "production" ? 1 : 3,
     connectionTimeoutMillis: 10_000,
     idleTimeoutMillis: 10_000,
     allowExitOnIdle: true,

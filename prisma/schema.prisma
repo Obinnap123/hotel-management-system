@@ -69,7 +69,8 @@ model RoomType {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  rooms Room[]
+  rooms              Room[]
+  featuredPlacements WebsiteFeaturedRoomType[]
 }
 
 model Room {
@@ -217,6 +218,10 @@ model WebsiteContent {
   aboutImageUrl         String?
   aboutImagePublicId    String?
   aboutImageAlt         String             @default("")
+  showFeaturedRooms     Boolean            @default(true)
+  showFacilities        Boolean            @default(true)
+  showAboutHotel        Boolean            @default(true)
+  showBookingSteps      Boolean            @default(true)
   roomsEyebrow          String             @default("")
   roomsHeading          String             @default("")
   roomsDescription      String             @default("")
@@ -227,6 +232,24 @@ model WebsiteContent {
   updatedAt             DateTime           @updatedAt
   heroImages            WebsiteHeroImage[]
   facilities            WebsiteFacility[]
+  featuredRoomTypes     WebsiteFeaturedRoomType[]
+}
+
+model WebsiteFeaturedRoomType {
+  id               String   @id @default(cuid())
+  displayOrder     Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  websiteContentId String
+  websiteContent   WebsiteContent @relation(fields: [websiteContentId], references: [id], onDelete: Cascade)
+  roomTypeId        String
+  roomType          RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteContentId, roomTypeId])
+  @@unique([websiteContentId, displayOrder])
+  @@index([websiteContentId])
+  @@index([roomTypeId])
 }
 
 model WebsiteHeroImage {

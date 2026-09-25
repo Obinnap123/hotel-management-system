@@ -5,6 +5,15 @@ import type {
 } from "@/lib/reservation-theme";
 import type { ReservationWebsiteCopy } from "@/lib/reservation-content";
 import type { ReservationFacility } from "@/lib/reservation-facilities";
+import type { HomepageSectionVisibility } from "@/lib/homepage-structure";
+
+export type HomepageRoomTypeOption = {
+  id: string;
+  name: string;
+  slug: string;
+  coverImage: string | null;
+  roomInventoryCount: number;
+};
 
 export type HotelProfileSettingsValues = {
   hotelName: string;
@@ -25,6 +34,9 @@ export type ReservationWebsiteSettingsValues = {
   heroImages: string[];
   heroImagePublicIds: string[];
   facilities: ReservationFacility[];
+  featuredRoomTypeIds: string[];
+  homepageRoomTypes: HomepageRoomTypeOption[];
+  sectionVisibility: HomepageSectionVisibility;
   aboutImage: {
     url: string;
     defaultUrl: string;

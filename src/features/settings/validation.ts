@@ -9,6 +9,7 @@ import {
   reservationFacilityIconKeys,
   reservationFacilityLimits,
 } from "@/lib/reservation-facilities";
+import { homepageFeaturedRoomLimit } from "@/lib/homepage-structure";
 
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -181,6 +182,33 @@ export const reservationFacilitiesSchema = z
     reservationFacilityLimits.maximum,
     `Use no more than ${reservationFacilityLimits.maximum} homepage facilities.`,
   );
+
+export const homepageStructureSchema = z
+  .object({
+    featuredRoomTypeIds: z
+      .array(z.string().trim().min(1))
+      .max(
+        homepageFeaturedRoomLimit,
+        `Feature no more than ${homepageFeaturedRoomLimit} room types.`,
+      )
+      .refine(
+        (roomTypeIds) => new Set(roomTypeIds).size === roomTypeIds.length,
+        "Choose each featured room type only once.",
+      ),
+    showFeaturedRooms: z.boolean(),
+    showFacilities: z.boolean(),
+    showAboutHotel: z.boolean(),
+    showBookingSteps: z.boolean(),
+  })
+  .superRefine((value, context) => {
+    if (value.showFeaturedRooms && value.featuredRoomTypeIds.length === 0) {
+      context.addIssue({
+        code: "custom",
+        message: "Choose at least one featured room type or hide the section.",
+        path: ["featuredRoomTypeIds"],
+      });
+    }
+  });
 
 const brandColorSchema = z
   .string()

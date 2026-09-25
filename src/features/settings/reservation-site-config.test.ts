@@ -92,6 +92,42 @@ describe("reservation-site configuration", () => {
     assert.equal(config.website.facilities.length, 6);
     assert.equal(config.website.aboutImage.url, defaultReservationAboutImage);
     assert.equal(config.website.aboutImage.isDefault, true);
+    assert.deepEqual(config.website.featuredRoomTypeIds, []);
+    assert.deepEqual(config.website.sectionVisibility, {
+      showFeaturedRooms: true,
+      showFacilities: true,
+      showAboutHotel: true,
+      showBookingSteps: true,
+    });
+  });
+
+  it("returns configured homepage visibility and featured-room order", () => {
+    const config = buildReservationSiteConfig({
+      branding: null,
+      hotel,
+      website: {
+        websiteTitle: "",
+        websiteDescription: "",
+        updatedAt: new Date("2026-08-13T13:00:00Z"),
+        heroImages: [],
+        featuredRoomTypes: [
+          { roomTypeId: "deluxe", displayOrder: 1 },
+          { roomTypeId: "suite", displayOrder: 0 },
+        ],
+        showFeaturedRooms: true,
+        showFacilities: false,
+        showAboutHotel: false,
+        showBookingSteps: true,
+      },
+    });
+
+    assert.deepEqual(config.website.featuredRoomTypeIds, ["suite", "deluxe"]);
+    assert.deepEqual(config.website.sectionVisibility, {
+      showFeaturedRooms: true,
+      showFacilities: false,
+      showAboutHotel: false,
+      showBookingSteps: true,
+    });
   });
 
   it("returns configured facilities and About Hotel media", () => {

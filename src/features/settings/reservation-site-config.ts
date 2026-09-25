@@ -14,6 +14,10 @@ import {
   isReservationFacilityIconKey,
   type ReservationFacility,
 } from "@/lib/reservation-facilities";
+import {
+  defaultHomepageSectionVisibility,
+  type HomepageSectionVisibility,
+} from "@/lib/homepage-structure";
 
 export const defaultReservationHeroImages = [
   "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=88",
@@ -58,6 +62,8 @@ export type ReservationSiteConfig = {
     heroImages: ReservationHeroImage[];
     configuredFacilities: ReservationFacility[];
     facilities: ReservationFacility[];
+    featuredRoomTypeIds: string[];
+    sectionVisibility: HomepageSectionVisibility;
     aboutImage: {
       url: string;
       defaultUrl: string;
@@ -110,6 +116,14 @@ type WebsiteContentSource = {
     iconKey: string;
     displayOrder: number;
   }>;
+  featuredRoomTypes?: Array<{
+    roomTypeId: string;
+    displayOrder: number;
+  }>;
+  showFeaturedRooms?: boolean;
+  showFacilities?: boolean;
+  showAboutHotel?: boolean;
+  showBookingSteps?: boolean;
   aboutImageUrl?: string | null;
   aboutImagePublicId?: string | null;
   aboutImageAlt?: string;
@@ -208,6 +222,21 @@ export function buildReservationSiteConfig({
     configuredFacilities.length > 0
       ? configuredFacilities
       : defaultReservationFacilities.map((facility) => ({ ...facility }));
+  const featuredRoomTypeIds = (website?.featuredRoomTypes ?? [])
+    .sort((first, second) => first.displayOrder - second.displayOrder)
+    .map((placement) => placement.roomTypeId);
+  const sectionVisibility: HomepageSectionVisibility = {
+    showFeaturedRooms:
+      website?.showFeaturedRooms ??
+      defaultHomepageSectionVisibility.showFeaturedRooms,
+    showFacilities:
+      website?.showFacilities ?? defaultHomepageSectionVisibility.showFacilities,
+    showAboutHotel:
+      website?.showAboutHotel ?? defaultHomepageSectionVisibility.showAboutHotel,
+    showBookingSteps:
+      website?.showBookingSteps ??
+      defaultHomepageSectionVisibility.showBookingSteps,
+  };
   const configuredAboutImageUrl = website?.aboutImageUrl?.trim() ?? "";
   const aboutImageIsDefault = configuredAboutImageUrl.length === 0;
   const aboutImage = {
@@ -255,6 +284,8 @@ export function buildReservationSiteConfig({
       heroImages,
       configuredFacilities,
       facilities,
+      featuredRoomTypeIds,
+      sectionVisibility,
       aboutImage,
       updatedAt: website?.updatedAt ?? hotel.updatedAt,
     },

@@ -1,10 +1,28 @@
 import { ReservationWebsiteSettingsForm } from "@/components/dashboard/settings/ReservationWebsiteSettingsForm";
 import { requireAdmin } from "@/features/rooms/authorization";
-import { getReservationSiteConfig } from "@/features/settings/queries";
+import {
+  getHomepageRoomTypeOptions,
+  getReservationSiteConfig,
+} from "@/features/settings/queries";
+import { selectDefaultFeaturedRoomTypeIds } from "@/lib/homepage-structure";
 
 export default async function ReservationWebsiteSettingsPage() {
   await requireAdmin();
-  const config = await getReservationSiteConfig();
+  const [config, roomTypeRecords] = await Promise.all([
+    getReservationSiteConfig(),
+    getHomepageRoomTypeOptions(),
+  ]);
+  const homepageRoomTypes = roomTypeRecords.map((roomType) => ({
+    id: roomType.id,
+    name: roomType.name,
+    slug: roomType.slug,
+    coverImage: roomType.coverImage,
+    roomInventoryCount: roomType._count.rooms,
+  }));
+  const featuredRoomTypeIds =
+    config.website.featuredRoomTypeIds.length > 0
+      ? config.website.featuredRoomTypeIds
+      : selectDefaultFeaturedRoomTypeIds(homepageRoomTypes);
 
   return (
     <ReservationWebsiteSettingsForm
@@ -20,6 +38,9 @@ export default async function ReservationWebsiteSettingsPage() {
           (image) => image.storageId ?? "",
         ),
         facilities: config.website.facilities,
+        featuredRoomTypeIds,
+        homepageRoomTypes,
+        sectionVisibility: config.website.sectionVisibility,
         aboutImage: config.website.aboutImage,
         updatedAt: config.website.updatedAt.toISOString(),
         preview: {
