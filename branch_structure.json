@@ -1,0 +1,15 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "feature/v1-product-foundation",
+    "main"
+  ],
+  "parent": {
+    "feature/v1-product-foundation": "main",
+    "main": null
+  },
+  "order": [
+    "main",
+    "feature/v1-product-foundation"
+  ]
+}

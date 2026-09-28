@@ -10,6 +10,9 @@ export default async function SettingsPage() {
   return (
     <SettingsOverview
       currency={config.hotel.currency}
+      customPolicyCount={Object.values(config.policies.configured).filter(
+        (value) => value.trim().length > 0,
+      ).length}
       heroImageCount={config.website.customHeroImages.length}
       hasCustomLogo={Boolean(config.branding.logoUrl)}
       hotelName={config.hotel.name}

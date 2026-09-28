@@ -21,6 +21,7 @@ import { retryTransientDatabaseRead } from "@/server/db/retry";
 import {
   brandingThemeSettingsSchema,
   homepageStructureSchema,
+  hotelPolicySettingsSchema,
   hotelProfileSettingsSchema,
   reservationFacilitiesSchema,
   reservationWebsiteSettingsSchema,
@@ -28,6 +29,7 @@ import {
 
 const settingsPath = "/dashboard/settings";
 const hotelProfilePath = `${settingsPath}/hotel-profile`;
+const hotelPoliciesPath = `${settingsPath}/policies`;
 const brandingPath = `${settingsPath}/branding`;
 const reservationWebsitePath = `${settingsPath}/reservation-website`;
 const brandingImageFolder = "hotel-management-system/branding";
@@ -110,6 +112,46 @@ export async function updateHotelProfileSettingsAction(
   revalidatePath("/demo", "layout");
   revalidatePath("/");
   return success("Hotel profile updated.");
+}
+
+export async function updateHotelPolicySettingsAction(
+  _state: SettingsActionState,
+  formData: FormData,
+): Promise<SettingsActionState> {
+  await requireAdmin();
+
+  const parsed = hotelPolicySettingsSchema.safeParse(
+    Object.fromEntries(formData),
+  );
+
+  if (!parsed.success) {
+    return failure(
+      parsed.error.issues[0]?.message ?? "Invalid hotel policies.",
+    );
+  }
+
+  try {
+    await prisma.hotelSettings.upsert({
+      where: { singletonKey: "default" },
+      update: parsed.data,
+      create: {
+        singletonKey: "default",
+        ...parsed.data,
+      },
+    });
+  } catch (error) {
+    return failure(
+      error instanceof Error
+        ? error.message
+        : "Unable to update the hotel policies.",
+    );
+  }
+
+  revalidatePath(settingsPath);
+  revalidatePath(hotelPoliciesPath);
+  revalidatePath("/demo", "layout");
+  revalidatePath("/");
+  return success("Hotel policies updated.");
 }
 
 export async function updateReservationWebsiteSettingsAction(

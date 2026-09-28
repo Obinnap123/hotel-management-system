@@ -61,6 +61,7 @@ export const config = {
     "/features",
     "/login",
     "/pricing",
+    "/policies",
     "/request-demo/:path*",
     "/rooms/:path*",
     "/solutions",
@@ -76,6 +77,7 @@ function getReservationRewritePath(pathname: string) {
   if (
     pathname === "/book" ||
     pathname === "/booking-success" ||
+    pathname === "/policies" ||
     pathname === "/rooms" ||
     pathname.startsWith("/rooms/")
   ) {

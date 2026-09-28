@@ -25,6 +25,13 @@ export type HotelProfileSettingsValues = {
   currency: string;
 };
 
+export type HotelPolicySettingsValues = {
+  cancellationPolicy: string;
+  checkInRequirements: string;
+  houseRules: string;
+  reservationTerms: string;
+};
+
 export type ReservationWebsiteSettingsValues = {
   hotelName: string;
   websiteTitle: string;

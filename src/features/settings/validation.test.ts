@@ -4,9 +4,44 @@ import { createDefaultReservationWebsiteCopy } from "@/lib/reservation-content";
 import {
   brandingThemeSettingsSchema,
   homepageStructureSchema,
+  hotelPolicySettingsSchema,
   reservationFacilitiesSchema,
   reservationWebsiteSettingsSchema,
 } from "./validation";
+
+describe("hotel policy validation", () => {
+  it("accepts the four structured policy fields", () => {
+    const result = hotelPolicySettingsSchema.safeParse({
+      cancellationPolicy: "Contact reception before cancelling.",
+      checkInRequirements: "Bring a valid means of identification.",
+      houseRules: "Only registered guests may use the room.",
+      reservationTerms: "Reservations remain pending until confirmed.",
+    });
+
+    assert.equal(result.success, true);
+  });
+
+  it("allows defaults through blank fields and rejects excessive wording", () => {
+    assert.equal(
+      hotelPolicySettingsSchema.safeParse({
+        cancellationPolicy: "",
+        checkInRequirements: "",
+        houseRules: "",
+        reservationTerms: "",
+      }).success,
+      true,
+    );
+    assert.equal(
+      hotelPolicySettingsSchema.safeParse({
+        cancellationPolicy: "A".repeat(1201),
+        checkInRequirements: "",
+        houseRules: "",
+        reservationTerms: "",
+      }).success,
+      false,
+    );
+  });
+});
 
 describe("homepage structure validation", () => {
   it("accepts ordered featured rooms and optional section visibility", () => {
