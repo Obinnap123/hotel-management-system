@@ -18,6 +18,11 @@ import {
   defaultHomepageSectionVisibility,
   type HomepageSectionVisibility,
 } from "@/lib/homepage-structure";
+import {
+  createDefaultHotelPolicies,
+  resolveHotelPolicies,
+  type HotelPolicies,
+} from "@/lib/hotel-policies";
 
 export const defaultReservationHeroImages = [
   "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2000&q=88",
@@ -49,6 +54,12 @@ export type ReservationSiteConfig = {
     defaultCheckInTime: string;
     defaultCheckOutTime: string;
     currency: string;
+  };
+  policies: {
+    configured: HotelPolicies;
+    defaults: HotelPolicies;
+    resolved: HotelPolicies;
+    updatedAt: Date;
   };
   website: {
     configuredTitle: string;
@@ -95,6 +106,10 @@ type HotelSettingsSource = {
   defaultCheckInTime: string;
   defaultCheckOutTime: string;
   currency: string;
+  cancellationPolicy?: string;
+  checkInRequirements?: string;
+  houseRules?: string;
+  reservationTerms?: string;
   updatedAt: Date;
 };
 
@@ -152,6 +167,17 @@ export function buildReservationSiteConfig({
   website: WebsiteContentSource;
 }): ReservationSiteConfig {
   const hotelName = hotel.hotelName.trim() || "Our Hotel";
+  const configuredPolicies: HotelPolicies = {
+    cancellationPolicy: hotel.cancellationPolicy ?? "",
+    checkInRequirements: hotel.checkInRequirements ?? "",
+    houseRules: hotel.houseRules ?? "",
+    reservationTerms: hotel.reservationTerms ?? "",
+  };
+  const defaultPolicies = createDefaultHotelPolicies({
+    checkInTime: hotel.defaultCheckInTime,
+    checkOutTime: hotel.defaultCheckOutTime,
+    hotelName,
+  });
   const configuredTitle = website?.websiteTitle ?? "";
   const configuredDescription = website?.websiteDescription ?? "";
   const configuredCopy: ReservationWebsiteCopy = {
@@ -267,6 +293,12 @@ export function buildReservationSiteConfig({
       defaultCheckInTime: hotel.defaultCheckInTime,
       defaultCheckOutTime: hotel.defaultCheckOutTime,
       currency: hotel.currency,
+    },
+    policies: {
+      configured: configuredPolicies,
+      defaults: defaultPolicies,
+      resolved: resolveHotelPolicies(configuredPolicies, defaultPolicies),
+      updatedAt: hotel.updatedAt,
     },
     website: {
       configuredTitle,

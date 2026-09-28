@@ -1,15 +1,17 @@
 "use client";
 
-import { useActionState, useId } from "react";
+import { useActionState, useId, useState } from "react";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { createPublicReservationAction, type PublicReservationActionState } from "@/features/public-reservations/actions";
 import type { PublicRoomTypeSummary } from "@/features/public-room-types/queries";
+import { publicReservationPath } from "@/lib/public/routes";
 
 type BookingFormProps = { roomTypes: PublicRoomTypeSummary[]; defaultRoomTypeSlug?: string; defaultCheckInDate?: string; defaultCheckOutDate?: string; defaultGuestCount?: string };
 const initialState: PublicReservationActionState = { ok: false, message: "" };
 
 export function BookingForm({ defaultCheckInDate, defaultCheckOutDate, defaultGuestCount, defaultRoomTypeSlug, roomTypes }: BookingFormProps) {
   const [state, formAction, pending] = useActionState(createPublicReservationAction, initialState);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const prefix = useId();
 
   return (
@@ -37,7 +39,44 @@ export function BookingForm({ defaultCheckInDate, defaultCheckOutDate, defaultGu
 
       <Field error={state.fieldErrors?.specialRequests?.[0]} hint="Optional" id={`${prefix}-requests`} label="Special requests"><textarea aria-describedby={state.fieldErrors?.specialRequests ? `${prefix}-requests-error` : undefined} aria-invalid={Boolean(state.fieldErrors?.specialRequests)} className={`${controlClass} min-h-28 py-3`} id={`${prefix}-requests`} name="specialRequests" placeholder="Arrival time, accessibility needs, or anything reception should know" /></Field>
 
-      <button className="inline-flex h-13 w-full items-center justify-center gap-3 bg-[var(--reservation-primary)] px-6 text-xs font-bold uppercase tracking-[0.14em] text-[var(--reservation-on-primary)] transition hover:bg-[var(--reservation-primary-hover)] disabled:opacity-65" disabled={pending || roomTypes.length === 0} type="submit">{pending ? <><LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> Reserving your stay</> : <>Complete reservation <ArrowRight aria-hidden="true" className="h-4 w-4" /></>}</button>
+      <div className="border-y border-[var(--reservation-line)] py-6">
+        <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-[var(--reservation-ink)]" htmlFor={`${prefix}-terms`}>
+          <input
+            aria-describedby={state.fieldErrors?.termsAccepted ? `${prefix}-terms-error` : `${prefix}-terms-help`}
+            aria-invalid={Boolean(state.fieldErrors?.termsAccepted)}
+            checked={termsAccepted}
+            className="mt-1 h-4 w-4 shrink-0 accent-[var(--reservation-primary)]"
+            id={`${prefix}-terms`}
+            name="termsAccepted"
+            onChange={(event) => setTermsAccepted(event.target.checked)}
+            required
+            type="checkbox"
+            value="accepted"
+          />
+          <span>
+            I have read and accept the hotel&apos;s {" "}
+            <a
+              className="font-semibold text-[var(--reservation-primary)] underline underline-offset-4"
+              href={publicReservationPath("/policies")}
+            >
+              reservation terms and policies
+            </a>
+            .
+          </span>
+        </label>
+        <p className="mt-2 pl-7 text-xs leading-5 text-[var(--reservation-muted)]" id={`${prefix}-terms-help`}>
+          {termsAccepted
+            ? "Policies accepted. You can now complete your reservation."
+            : "Accept the policies to enable the Complete reservation button."}
+        </p>
+        {state.fieldErrors?.termsAccepted?.[0] ? (
+          <p className="mt-2 pl-7 text-sm text-red-700" id={`${prefix}-terms-error`}>
+            {state.fieldErrors.termsAccepted[0]}
+          </p>
+        ) : null}
+      </div>
+
+      <button className="inline-flex h-13 w-full items-center justify-center gap-3 bg-[var(--reservation-primary)] px-6 text-xs font-bold uppercase tracking-[0.14em] text-[var(--reservation-on-primary)] transition hover:bg-[var(--reservation-primary-hover)] disabled:cursor-not-allowed disabled:opacity-45" disabled={pending || roomTypes.length === 0 || !termsAccepted} type="submit">{pending ? <><LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> Reserving your stay</> : <>Complete reservation <ArrowRight aria-hidden="true" className="h-4 w-4" /></>}</button>
       <p className="text-center text-xs leading-5 text-[var(--reservation-muted)]">Your reservation is sent directly to hotel reception. Payment and final room assignment are handled by hotel staff.</p>
     </form>
   );

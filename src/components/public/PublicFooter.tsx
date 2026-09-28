@@ -31,6 +31,7 @@ export function PublicFooter({ copy, emailAddress, hotelName, phoneNumber, physi
               <Link className="hover:text-white" href={publicReservationPath("/rooms")}>Rooms & suites</Link>
               <Link className="hover:text-white" href={publicReservationPath("/#about")}>Our hotel</Link>
               <Link className="hover:text-white" href={publicReservationPath("/book")}>Reservations</Link>
+              <Link className="hover:text-white" href={publicReservationPath("/policies")}>Hotel policies</Link>
             </nav>
           </div>
           <div>
@@ -45,7 +46,7 @@ export function PublicFooter({ copy, emailAddress, hotelName, phoneNumber, physi
         </div>
         <div className="mt-16 flex flex-col gap-4 border-t border-white/12 pt-6 text-[0.68rem] uppercase tracking-[0.12em] text-white/65 sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} {hotelName}</p>
-          <div className="flex items-center gap-5"><p>Direct reservations</p><Link className="hover:text-white" href="/login">Staff login</Link></div>
+          <div className="flex flex-wrap items-center gap-5"><p>Direct reservations</p><Link className="hover:text-white" href={publicReservationPath("/policies")}>Policies</Link><Link className="hover:text-white" href="/login">Staff login</Link></div>
         </div>
       </div>
     </footer>

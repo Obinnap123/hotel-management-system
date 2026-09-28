@@ -10,6 +10,7 @@ import {
   reservationFacilityLimits,
 } from "@/lib/reservation-facilities";
 import { homepageFeaturedRoomLimit } from "@/lib/homepage-structure";
+import { hotelPolicyLimits } from "@/lib/hotel-policies";
 
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -31,6 +32,37 @@ export const hotelProfileSettingsSchema = z.object({
     .refine(
       (value) => isSupportedCurrencyCode(value),
       "Choose a supported currency.",
+    ),
+});
+
+export const hotelPolicySettingsSchema = z.object({
+  cancellationPolicy: z
+    .string()
+    .trim()
+    .max(
+      hotelPolicyLimits.cancellationPolicy,
+      `Cancellation policy must be ${hotelPolicyLimits.cancellationPolicy} characters or fewer.`,
+    ),
+  checkInRequirements: z
+    .string()
+    .trim()
+    .max(
+      hotelPolicyLimits.checkInRequirements,
+      `Check-in requirements must be ${hotelPolicyLimits.checkInRequirements} characters or fewer.`,
+    ),
+  houseRules: z
+    .string()
+    .trim()
+    .max(
+      hotelPolicyLimits.houseRules,
+      `House rules must be ${hotelPolicyLimits.houseRules} characters or fewer.`,
+    ),
+  reservationTerms: z
+    .string()
+    .trim()
+    .max(
+      hotelPolicyLimits.reservationTerms,
+      `Reservation terms must be ${hotelPolicyLimits.reservationTerms} characters or fewer.`,
     ),
 });
 

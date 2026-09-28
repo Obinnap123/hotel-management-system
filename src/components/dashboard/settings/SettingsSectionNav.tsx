@@ -7,6 +7,7 @@ const sections = [
     href: "/dashboard/settings/reservation-website",
     label: "Reservation website",
   },
+  { href: "/dashboard/settings/policies", label: "Hotel policies" },
 ] as const;
 
 type SettingsSectionNavProps = {

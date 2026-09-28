@@ -6,6 +6,8 @@ import {
   Globe2,
   Images,
   Palette,
+  ScrollText,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { SettingsPageHeader } from "./SettingsPageHeader";
@@ -15,6 +17,7 @@ type SettingsOverviewProps = {
   heroImageCount: number;
   hasCustomLogo: boolean;
   hotelName: string;
+  customPolicyCount: number;
   websiteTitle: string;
 };
 
@@ -23,6 +26,7 @@ export function SettingsOverview({
   heroImageCount,
   hasCustomLogo,
   hotelName,
+  customPolicyCount,
   websiteTitle,
 }: SettingsOverviewProps) {
   return (
@@ -101,12 +105,25 @@ export function SettingsOverview({
             }
             title="Reservation website"
           />
+          <SettingsLink
+            description="Cancellation guidance, arrival requirements, house rules, and the terms guests accept when reserving."
+            href="/dashboard/settings/policies"
+            icon={ScrollText}
+            meta={
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5" />
+                {customPolicyCount > 0
+                  ? `${customPolicyCount} of 4 sections customized`
+                  : "Recommended policy wording active"}
+              </span>
+            }
+            title="Hotel policies"
+          />
         </div>
       </section>
 
       <p className="max-w-3xl text-sm leading-6 text-slate-500">
-        Booking rules, policies, and notifications will appear here as their
-        controls are introduced in the next product steps.
+        Reservation notifications will appear here in the next product step.
       </p>
     </div>
   );

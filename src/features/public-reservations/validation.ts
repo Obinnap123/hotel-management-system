@@ -13,6 +13,9 @@ export const publicReservationSchema = z
       .int("Number of guests must be a whole number.")
       .min(1, "Number of guests must be at least 1."),
     specialRequests: z.string().trim().optional(),
+    termsAccepted: z.literal("accepted", {
+      error: "Read and accept the hotel policies before reserving.",
+    }),
   })
   .superRefine((data, context) => {
     const checkInDate = toPublicDate(data.checkInDate);

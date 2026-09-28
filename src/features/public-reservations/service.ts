@@ -6,6 +6,11 @@ import {
 import { findAvailableRoomForRoomType } from "@/lib/public/availability";
 import { formatPublicBookingNumber } from "@/lib/public/format";
 import {
+  createDefaultHotelPolicies,
+  createHotelPolicySnapshot,
+  resolveHotelPolicies,
+} from "@/lib/hotel-policies";
+import {
   isOverlappingBookingConstraintError,
   runSerializableTransaction,
 } from "@/server/db/transaction";
@@ -64,15 +69,43 @@ export async function createPublicReservation(
         );
       }
 
-      const [guest, createdById] = await Promise.all([
+      const [guest, createdById, hotelSettings] = await Promise.all([
         findOrCreateGuest(input, tx),
         getPublicBookingCreatorId(tx),
+        tx.hotelSettings.findUnique({
+          where: { singletonKey: "default" },
+          select: {
+            hotelName: true,
+            defaultCheckInTime: true,
+            defaultCheckOutTime: true,
+            cancellationPolicy: true,
+            checkInRequirements: true,
+            houseRules: true,
+            reservationTerms: true,
+          },
+        }),
       ]);
       const totalAmount = calculateReservationTotal({
         checkInDate: dates.checkInDate,
         checkOutDate: dates.checkOutDate,
         pricePerNight: room.pricePerNight,
       });
+
+      const termsAcceptedAt = new Date();
+      const defaultPolicies = createDefaultHotelPolicies({
+        checkInTime: hotelSettings?.defaultCheckInTime ?? "14:00",
+        checkOutTime: hotelSettings?.defaultCheckOutTime ?? "12:00",
+        hotelName: hotelSettings?.hotelName?.trim() || "the hotel",
+      });
+      const resolvedPolicies = resolveHotelPolicies(
+        {
+          cancellationPolicy: hotelSettings?.cancellationPolicy ?? "",
+          checkInRequirements: hotelSettings?.checkInRequirements ?? "",
+          houseRules: hotelSettings?.houseRules ?? "",
+          reservationTerms: hotelSettings?.reservationTerms ?? "",
+        },
+        defaultPolicies,
+      );
 
       const booking = await tx.booking.create({
         data: {
@@ -83,6 +116,11 @@ export async function createPublicReservation(
           totalAmount,
           guestCount: input.guestCount,
           specialRequests: input.specialRequests || null,
+          termsAcceptedAt,
+          policySnapshot: createHotelPolicySnapshot(
+            resolvedPolicies,
+            termsAcceptedAt,
+          ),
           createdById,
           status: BookingStatus.PENDING,
         },

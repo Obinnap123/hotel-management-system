@@ -33,6 +33,8 @@ describe("reservation-site configuration", () => {
       "Old George HA | Official Website & Reservations",
     );
     assert.match(config.website.description, /Old George HA/);
+    assert.match(config.policies.resolved.checkInRequirements, /14:00/);
+    assert.match(config.policies.resolved.reservationTerms, /pending/);
     assert.equal(config.website.configuredCopy.heroHeading, "");
     assert.equal(
       config.website.copy.heroEyebrow,
@@ -99,6 +101,30 @@ describe("reservation-site configuration", () => {
       showAboutHotel: true,
       showBookingSteps: true,
     });
+  });
+
+  it("uses configured hotel policies without replacing blank defaults", () => {
+    const config = buildReservationSiteConfig({
+      branding: null,
+      hotel: {
+        ...hotel,
+        cancellationPolicy: "Cancel at least 24 hours before arrival.",
+        checkInRequirements: "",
+        houseRules: "Quiet hours begin at 10:00 PM.",
+        reservationTerms: "Reservations must be confirmed by reception.",
+      },
+      website: null,
+    });
+
+    assert.equal(
+      config.policies.resolved.cancellationPolicy,
+      "Cancel at least 24 hours before arrival.",
+    );
+    assert.match(config.policies.resolved.checkInRequirements, /14:00/);
+    assert.equal(
+      config.policies.resolved.reservationTerms,
+      "Reservations must be confirmed by reception.",
+    );
   });
 
   it("returns configured homepage visibility and featured-room order", () => {
